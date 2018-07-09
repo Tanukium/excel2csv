@@ -19,8 +19,8 @@ class Excel2csv(object):
         self.file_name = os.path.basename(self.file_path)
 
     def make_csv_path(self):
-        file_dirname = os.path.dirname(self.file_path) + "\\"
-        csv_path = file_dirname + os.path.splitext(self.file_name)[0] + "\\"
+        file_dirname = os.path.dirname(self.file_path) + os.sep
+        csv_path = file_dirname + os.path.splitext(self.file_name)[0] + os.sep
         if not os.path.exists(csv_path):
             os.mkdir(csv_path)
         return csv_path
