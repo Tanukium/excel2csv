@@ -28,11 +28,11 @@ class Excel2csv(object):
     def csv_from_sheet(self, book_name, sheet_name):
         sheet = book_name.sheet_by_name(sheet_name)
         csv_name = sheet_name + '.csv'
-        csv_file = open(self.make_csv_path() + csv_name, 'w')
-        writer = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
-        for row_num in range(sheet.nrows):
-            writer.writerow(sheet.row_values(row_num))
-        csv_file.close()
+        with open(self.make_csv_path() + csv_name, 'w', newline='') as csv_file:
+            writer = csv.writer(csv_file, delimiter=',', 
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            for row_num in range(sheet.nrows):
+                writer.writerow(sheet.row_values(row_num))
 
     def csv_from_excel(self):
         book = xlrd.open_workbook(self.file_path)

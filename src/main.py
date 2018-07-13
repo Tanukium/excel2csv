@@ -50,8 +50,9 @@ class MyFrame(wx.Frame):
         # begin wxGlade: MyFrame.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_1.Add((400, 120), 0, wx.EXPAND, 0)
+
         label_1 = wx.StaticText(self, wx.ID_ANY,
-                                u"\u3053\u3061\u3089\u306bExcel\u30d5\u30a1\u30a4\u30eb\u3092\u30c9\u30e9\u30c3\u30b0\u30a4\u30f3\u3057\u3066\u304f\u3060\u3055\u3044",
+                                u"こちらにExcelファイルをドラッグインしてください",
                                 style=wx.ALIGN_CENTER)
         label_1.SetMinSize((400, 20))
         label_1.SetFont(wx.Font(13, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
@@ -61,6 +62,7 @@ class MyFrame(wx.Frame):
 
         sizer_1.Add(label_1, 0, wx.ALIGN_CENTER, 0)
         sizer_1.Add((400, 130), 0, wx.EXPAND, 0)
+
         self.SetSizer(sizer_1)
         self.Layout()
         # end wxGlade
