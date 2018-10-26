@@ -1,14 +1,18 @@
+#!/anaconda3/envs/msemi/bin/python
+# -*- coding: UTF-8 -*-
+
 import csv
 import os
 from collections import Counter
 
 
-class Data_length(object):
+class DataLength(object):
 
     def __init__(self, file_name):
         self.table = []
         self.data_length = None
-        with open(os.path.abspath(file_name), 'r') as csv_file:
+        with open(os.path.abspath(file_name),
+                  'r', encoding='cp932') as csv_file:
             reader = csv.reader(csv_file)
             for row in reader:
                 self.table.append(row)
@@ -22,7 +26,7 @@ class Data_length(object):
             pop_num += 1
             if not self.table[index]:
                 break
-        return(table_length-pop_num-1)
+        return table_length - pop_num - 1
     
     def count_data_length(self):
         if not self.data_length:

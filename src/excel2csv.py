@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/anaconda3/envs/msemi/bin/python
 # -*- coding: UTF-8 -*-
 
 import sys
@@ -9,7 +9,7 @@ import xlrd
 
 class Excel2csv(object):
 
-    def __init__(self, file_path, file_name):
+    def __init__(self, file_name):
         if len(sys.argv) > 1 and sys.argv[1]:
             self.file_path = os.path.abspath(sys.argv[1])
         elif file_name:
@@ -28,7 +28,8 @@ class Excel2csv(object):
     def csv_from_sheet(self, book_name, sheet_name):
         sheet = book_name.sheet_by_name(sheet_name)
         csv_name = sheet_name + '.csv'
-        with open(self.make_csv_path() + csv_name, 'w', newline='') as csv_file:
+        with open(self.make_csv_path() + csv_name, 'w',
+                  newline='', encoding='cp932') as csv_file:
             writer = csv.writer(csv_file, delimiter=',', 
                                 quotechar='|', quoting=csv.QUOTE_MINIMAL)
             for row_num in range(sheet.nrows):
@@ -42,5 +43,5 @@ class Excel2csv(object):
 
 
 if __name__ == '__main__':
-    excel2csv = Excel2csv(sys.argv[1], None)
+    excel2csv = Excel2csv(None)
     excel2csv.csv_from_excel()
