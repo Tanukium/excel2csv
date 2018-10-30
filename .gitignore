@@ -243,3 +243,4 @@ $RECYCLE.BIN/
 src/*.csv
 src/*.xls
 src/*.xlsx
+.idea/*
