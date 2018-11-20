@@ -45,6 +45,7 @@ def del_brank_str(arr):
 
 
 def pick_index_row_up(arr):
+    global row_num
     rows = []
     for row in arr:
         if type(row[0]) == int:
