@@ -1,4 +1,3 @@
-#!/anaconda3/envs/msemi/bin/python
 # -*- coding: UTF-8 -*-
 
 import csv
