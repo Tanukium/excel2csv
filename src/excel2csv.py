@@ -4,7 +4,7 @@ import sys
 import os
 import csv
 import xlrd
-from collections import Counter as ct
+from collections import Counter as CoT
 
 
 def _get_data_from_sheet(book_name, sheet_name,
@@ -29,6 +29,20 @@ def _count_aline_data_length(data, index):
         if not data[index]:
             break
     return data_length - pop_num
+
+
+def _del_repeat(lst):
+    for item in lst:
+        while lst.count(item) > 1:
+            del lst[lst.index(item)]
+    return lst
+
+
+def _del_blank_mbr(lst):
+    for item in lst:
+        if not item:
+            del lst[lst.index(item)]
+    return lst
 
 
 class Excel2csv(object):
@@ -63,16 +77,84 @@ class Excel2csv(object):
             raise RuntimeError('No path or filename')
 
         self.file_name = os.path.basename(self.file_path)
+
         self.row_data, self.col_data = self._get_data_from_excel()
+
         self.row_length = len(self.col_data)
         self.col_length = len(self.row_data)
-        self.row_index_length, self.col_index_length = None, None
 
+        self.row_index_length, self.col_index_length = None, None
         (self.row_index_length,
-         self.col_index_length) = (self.row_length -
+         self.col_index_length) = (self.col_length -
                                    self._count_row_data_length(),
-                                   self.col_length -
+                                   self.row_length -
                                    self._count_col_data_length())
+
+    def _get_data_from_excel(self):
+        row_data, col_data = [], []
+        book = xlrd.open_workbook(self.file_path)
+        sheet_names = book.sheet_names()
+        for sheet_name in sheet_names:
+            _get_data_from_sheet(book, sheet_name,
+                                 "row", row_data)
+            _get_data_from_sheet(book, sheet_name,
+                                 "col", col_data)
+        return row_data, col_data
+
+    def _count_row_data_length(self):
+        if not self.row_index_length:
+            row_data_lengths = []
+            if self.col_data and self.row_length:
+                data = self.col_data[:]
+                for index in range(self.row_length):
+                    row_data_lengths.append(
+                        _count_aline_data_length(data, index))
+                self.col_data = self._get_data_from_excel()[1]
+                return CoT(row_data_lengths).most_common()[0][0]
+            else:
+                print("No col data or col length in the obj!")
+
+    def _count_col_data_length(self):
+        if not self.col_index_length:
+            col_data_lengths = []
+            if self.row_data and self.col_length:
+                data = self.row_data[:]
+                for index in range(self.col_length):
+                    col_data_lengths.append(
+                        _count_aline_data_length(data, index))
+                self.row_data = self._get_data_from_excel()[0]
+                return CoT(col_data_lengths).most_common()[0][0]
+            else:
+                print("No row data or row length in the obj!")
+
+    def _get_index_rows(self):
+        cols, col_lengths = [], []
+        for index in range(self.col_index_length, self.row_length):
+            cols.append(self.col_data[index][0:self.row_index_length])
+        for col in cols:
+            blank_col_count = 0
+            for item in col:
+                if not item:
+                    blank_col_count += 1
+                else:
+                    col_lengths.append(blank_col_count)
+                    break
+        for col in cols:
+            del col[:min(col_lengths)]
+            while not col[-1]:
+                col.pop()
+        for col in cols:
+            for index in range(len(col)):
+                if not col[index]:
+                    col[index] = cols[cols.index(col) - 1][index]
+                else:
+                    break
+        lst = []
+        for col in cols:
+            s = "_".join(col)
+            lst.append(s)
+            s = ""
+        return lst
 
     def _make_csv_path(self):
         """Making the path for saving csv file and return it.
@@ -92,49 +174,6 @@ class Excel2csv(object):
         if not os.path.exists(csv_path):
             os.mkdir(csv_path)
         return csv_path
-
-    def _get_data_from_excel(self):
-        row_data, col_data = [], []
-        book = xlrd.open_workbook(self.file_path)
-        sheet_names = book.sheet_names()
-        for sheet_name in sheet_names:
-            _get_data_from_sheet(book, sheet_name,
-                                 "row", row_data)
-            _get_data_from_sheet(book, sheet_name,
-                                 "col", col_data)
-        return row_data, col_data
-
-    def _count_row_data_length(self):
-        if not self.row_index_length:
-            row_data_lengths = []
-            if self.row_data and self.col_length:
-                data = self.row_data[:]
-                for index in range(self.col_length):
-                    row_data_lengths.append(
-                        _count_aline_data_length(data, index))
-                self.row_data = self._get_data_from_excel()[0]
-                return ct(row_data_lengths).most_common()[0][0]
-            else:
-                print("No row data or row length in the obj!")
-
-    def _count_col_data_length(self):
-        if not self.col_index_length:
-            col_data_lengths = []
-            if self.col_data and self.row_length:
-                data = self.col_data[:]
-                for index in range(self.row_length):
-                    col_data_lengths.append(
-                        _count_aline_data_length(data, index))
-                self.col_data = self._get_data_from_excel()[1]
-                return ct(col_data_lengths).most_common()[0][0]
-            else:
-                print("No col data or col length in the obj!")
-
-    def _get_index_rows(self):
-        rows = []
-        for index in range(self.row_index_length):
-            rows.append(self.row_data[index])
-        return rows
 
     def _csv_from_sheet(self, book_name, sheet_name):
         """Writing contents in the new csv file and save it.
@@ -169,6 +208,7 @@ def main():
     print(e2c.row_length, e2c.col_length)
     print(e2c.row_index_length, e2c.col_index_length)
     print(e2c._get_index_rows())
+    print(len(e2c._get_index_rows()))
 
 
 if __name__ == '__main__':
