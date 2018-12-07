@@ -40,8 +40,11 @@ def _del_repeat(lst):
 
 def _del_blank_mbr(lst):
     for item in lst:
-        if not item:
-            del lst[lst.index(item)]
+        try:
+            while not item:
+                del lst[lst.index(item)]
+        except ValueError:
+            break
     return lst
 
 
@@ -78,69 +81,94 @@ class Excel2csv(object):
 
         self.file_name = os.path.basename(self.file_path)
 
-        self.row_data, self.col_data = self._get_data_from_excel()
+        self.row_list, self.col_list = self._get_data_from_excel(0)
+        self._check_title_cell()
+        self.row_list, self.col_list = self._get_data_from_excel(0)
 
-        self.row_length = len(self.col_data)
-        self.col_length = len(self.row_data)
+        self.row_amount = len(self.row_list)  # 55
+        self.col_amount = len(self.col_list)  # 86
 
-        self.row_index_length, self.col_index_length = None, None
-        (self.row_index_length,
-         self.col_index_length) = (self.col_length -
-                                   self._count_row_data_length(),
-                                   self.row_length -
-                                   self._count_col_data_length())
+        self.index_row_amount, self.index_col_amount = None, None
+        (self.index_row_amount,
+         self.index_col_amount) = (self.row_amount -
+                                   self._count_row_data_length(0),
+                                   self.col_amount -
+                                   self._count_col_data_length(0))
 
-    def _get_data_from_excel(self):
+    def _get_data_from_excel(self, index):
         row_data, col_data = [], []
         book = xlrd.open_workbook(self.file_path)
         sheet_names = book.sheet_names()
-        for sheet_name in sheet_names:
-            _get_data_from_sheet(book, sheet_name,
-                                 "row", row_data)
-            _get_data_from_sheet(book, sheet_name,
-                                 "col", col_data)
+        _get_data_from_sheet(book, sheet_names[index],
+                             "row", row_data)
+        _get_data_from_sheet(book, sheet_names[index],
+                             "col", col_data)
         return row_data, col_data
 
-    def _count_row_data_length(self):
-        if not self.row_index_length:
+    def _count_row_data_length(self, col_index):
+        if not self.index_row_amount:
             row_data_lengths = []
-            if self.col_data and self.row_length:
-                data = self.col_data[:]
-                for index in range(self.row_length):
+            if self.col_list and self.col_amount:
+                data = self.col_list[:]
+                for index in range(self.col_amount):
                     row_data_lengths.append(
                         _count_aline_data_length(data, index))
-                self.col_data = self._get_data_from_excel()[1]
+                self.col_list = self._get_data_from_excel(col_index)[1]
                 return CoT(row_data_lengths).most_common()[0][0]
             else:
                 print("No col data or col length in the obj!")
 
-    def _count_col_data_length(self):
-        if not self.col_index_length:
+    def _count_col_data_length(self, row_index):
+        if not self.index_col_amount:
             col_data_lengths = []
-            if self.row_data and self.col_length:
-                data = self.row_data[:]
-                for index in range(self.col_length):
+            if self.row_list and self.row_amount:
+                data = self.row_list[:]
+                for index in range(self.row_amount):
                     col_data_lengths.append(
                         _count_aline_data_length(data, index))
-                self.row_data = self._get_data_from_excel()[0]
+                self.row_list = self._get_data_from_excel(row_index)[0]
                 return CoT(col_data_lengths).most_common()[0][0]
             else:
                 print("No row data or row length in the obj!")
 
+    def _check_title_cell(self):
+        _del_blank_mbr(_del_repeat(self.col_list[0]))
+        title = ""
+        if not self.col_list[0]:
+            _del_blank_mbr(self.row_list[0])
+            if len(self.row_list[0]) == 1 and self.row_list[0][0] != '':
+                title = self.row_list[0][0]
+        elif self.col_list[0][0] == self.row_list[0][0]:
+            title = self.row_list[0][0]
+        else:
+            title = "No title"
+        self.title = title
+
     def _get_index_rows(self):
-        cols, col_lengths = [], []
-        for index in range(self.col_index_length, self.row_length):
-            cols.append(self.col_data[index][0:self.row_index_length])
+        cols, blank_col_amount_list = [], []
+        for index in range(self.index_col_amount, self.col_amount):
+            cols.append(self.col_list[index][0:self.index_row_amount])
+        for col in cols:
+            for item in col:
+                if item == self.title:
+                    col[col.index(item)] = ''
         for col in cols:
             blank_col_count = 0
             for item in col:
                 if not item:
                     blank_col_count += 1
                 else:
-                    col_lengths.append(blank_col_count)
+                    blank_col_amount_list.append(blank_col_count)
                     break
+        blank_col_amount_list = _del_repeat(blank_col_amount_list)
+        blank_col_amount_list.sort()
         for col in cols:
-            del col[:min(col_lengths)]
+            if min(blank_col_amount_list) != 0:
+                del col[:min(blank_col_amount_list)]
+            else:
+                for index in range(blank_col_amount_list[1]):
+                    if not col[index]:
+                        col.pop(index)
             while not col[-1]:
                 col.pop()
         for col in cols:
@@ -153,7 +181,52 @@ class Excel2csv(object):
         for col in cols:
             s = "_".join(col)
             lst.append(s)
-            s = ""
+            del s
+        return lst
+
+    def _get_index_cols(self):
+        rows, blank_row_amount_list = [], []
+        for row in self.row_list:
+            rows.append(row[:self.index_col_amount])
+        for row in rows:
+            for item in row:
+                if item == self.title:
+                    row[row.index(item)] = ''
+        for row in rows:
+            blank_row_count = 0
+            for item in row:
+                if not item:
+                    blank_row_count += 1
+                else:
+                    blank_row_amount_list.append(blank_row_count)
+                    break
+        blank_row_amount_list = _del_repeat(blank_row_amount_list)
+        blank_row_amount_list.sort()
+        for row in rows:
+            if min(blank_row_amount_list) != 0:
+                del row[:min(blank_row_amount_list)]
+            else:
+                for index in range(blank_row_amount_list[1]):
+                    if not row[index]:
+                        row.pop(index)
+            while not row[-1]:
+                row.pop()
+                if not row:
+                    break
+        rows = _del_blank_mbr(rows)
+        for row in rows:
+            for index in range(len(row)):
+                if not row[index]:
+                    row[index] = rows[rows.index(row) - 1][index]
+                else:
+                    break
+        for row in rows:
+            _del_blank_mbr(row)
+        lst = []
+        for row in rows:
+            s = "_".join(row)
+            lst.append(s)
+            del s
         return lst
 
     def _make_csv_path(self):
@@ -205,10 +278,18 @@ class Excel2csv(object):
 
 def main():
     e2c = Excel2csv(None)
-    print(e2c.row_length, e2c.col_length)
-    print(e2c.row_index_length, e2c.col_index_length)
-    print(e2c._get_index_rows())
-    print(len(e2c._get_index_rows()))
+
+    print("このテーブルには", e2c.row_amount, "行があり、",
+          e2c.col_amount, "列がある.")
+    print("上から", e2c.index_row_amount, "番目までの行と、",
+          e2c.index_col_amount, "番目までの列はインデックス.")
+
+    print("インデックス行の内容は、", e2c._get_index_rows())
+    print("インデックス行には、", len(e2c._get_index_rows()), "個セルがある.")
+
+    print("インデックス列の内容は、", e2c._get_index_cols())
+    print("インデックス列には、", len(e2c._get_index_cols()), "個セルがある.")
+    print("このテーブルのタイトルは、", e2c.title, "です.")
 
 
 if __name__ == '__main__':
