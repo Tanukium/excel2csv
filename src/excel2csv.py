@@ -49,29 +49,8 @@ def _del_blank_mbr(lst):
 
 
 class Excel2csv(object):
-    """Exchanging .xls/.xlsx files to .csv file.
-
-    The object of this class will contain the name and absolute
-    path of a excel(.xls/.xlsx) file, and it has some methods to
-    read the excel file by line, then save it with csv format.
-
-    Attributes:
-        file_path: the path of .xls/.xlsx file.
-        file_name: the name of .xls/.xlsx file.
-
-    """
 
     def __init__(self, file_name):
-        """Reading the name and absolute path of excel file.
-
-        For testing, the __init__ method also provide a command-
-        line usage like `$ python excel2csv.py hogehoge.xls`.
-
-        Args:
-            file_name (str, optional): The name of excel file.
-                Should not write it in the *command-line usage*.
-
-        """
         if len(sys.argv) > 1 and sys.argv[1]:
             self.file_path = os.path.abspath(sys.argv[1])
         elif file_name:
@@ -80,20 +59,6 @@ class Excel2csv(object):
             raise RuntimeError('No path or filename')
 
         self.file_name = os.path.basename(self.file_path)
-
-        self.row_list, self.col_list = self._get_data_from_excel(0)
-        self._check_title_cell()
-        self.row_list, self.col_list = self._get_data_from_excel(0)
-
-        self.row_amount = len(self.row_list)  # 55
-        self.col_amount = len(self.col_list)  # 86
-
-        self.index_row_amount, self.index_col_amount = None, None
-        (self.index_row_amount,
-         self.index_col_amount) = (self.row_amount -
-                                   self._count_row_data_length(0),
-                                   self.col_amount -
-                                   self._count_col_data_length(0))
 
     def _get_data_from_excel(self, index):
         row_data, col_data = [], []
@@ -114,7 +79,11 @@ class Excel2csv(object):
                     row_data_lengths.append(
                         _count_aline_data_length(data, index))
                 self.col_list = self._get_data_from_excel(col_index)[1]
-                return CoT(row_data_lengths).most_common()[0][0]
+                result = CoT(row_data_lengths).most_common()
+                if not result[0][0]:
+                    return result[1][0]
+                else:
+                    return result[0][0]
             else:
                 print("No col data or col length in the obj!")
 
@@ -127,22 +96,30 @@ class Excel2csv(object):
                     col_data_lengths.append(
                         _count_aline_data_length(data, index))
                 self.row_list = self._get_data_from_excel(row_index)[0]
-                return CoT(col_data_lengths).most_common()[0][0]
+                result = CoT(col_data_lengths).most_common()
+                if not result[0][0]:
+                    return result[1][0]
+                else:
+                    return result[0][0]
             else:
                 print("No row data or row length in the obj!")
 
     def _check_title_cell(self):
-        _del_blank_mbr(_del_repeat(self.col_list[0]))
-        title = ""
-        if not self.col_list[0]:
-            _del_blank_mbr(self.row_list[0])
-            if len(self.row_list[0]) == 1 and self.row_list[0][0] != '':
+        if self.col_list:
+            _del_blank_mbr(_del_repeat(self.col_list[0]))
+            title = ""
+            if not self.col_list[0]:
+                _del_blank_mbr(self.row_list[0])
+                if len(self.row_list[0]) == 1 and self.row_list[0][0] != '':
+                    title = self.row_list[0][0]
+            elif self.col_list[0][0] == self.row_list[0][0]:
                 title = self.row_list[0][0]
-        elif self.col_list[0][0] == self.row_list[0][0]:
-            title = self.row_list[0][0]
+            else:
+                title = "No title"
+            self.title = title
         else:
             title = "No title"
-        self.title = title
+            self.title = title
 
     def _get_index_rows(self):
         cols, blank_col_amount_list = [], []
@@ -171,6 +148,9 @@ class Excel2csv(object):
                         col.pop(index)
             while not col[-1]:
                 col.pop()
+                if not col:
+                    break
+        cols = _del_blank_mbr(cols)
         for col in cols:
             for index in range(len(col)):
                 if not col[index]:
@@ -179,9 +159,15 @@ class Excel2csv(object):
                     break
         lst = []
         for col in cols:
-            s = "_".join(col)
+            col_new = []
+            for item in col:
+                if type(item) is float:
+                    col_new.append(str(item))
+                else:
+                    col_new.append(item)
+            s = "_".join(col_new)
             lst.append(s)
-            del s
+            del s, col_new
         return lst
 
     def _get_index_cols(self):
@@ -224,23 +210,60 @@ class Excel2csv(object):
             _del_blank_mbr(row)
         lst = []
         for row in rows:
-            s = "_".join(row)
+            row_new = []
+            for item in row:
+                if type(item) is float:
+                    row_new.append(str(item))
+                else:
+                    row_new.append(item)
+            s = "_".join(row_new)
             lst.append(s)
-            del s
+            del s, row_new
+        # diff = self.row_amount - self.index_row_amount - len(lst)
+        # if diff != 0:
+        #     for i in range(diff):
+        #        lst = [""] + lst
         return lst
 
+    def _get_data_rows(self):
+        data_rows = []
+        for index in range(self.index_row_amount, self.row_amount):
+            data_rows.append(self.row_list[index][self.index_col_amount:])
+        return data_rows
+
+    def _make_btf_sheet(self):
+        index_row = self._get_index_rows()  # [str * n]
+        index_col = self._get_index_cols()  # [str * n]
+        data_rows = [index_row] + self._get_data_rows()  # [list * n]
+        data_container = []
+        for row in data_rows:
+            if index_col:
+                for item in index_col:
+                    row = [item] + row
+                    data_container.append(row)
+                    index_col.pop(0)
+                    break
+            elif data_rows:
+                row = [""] + row
+                data_container.append(row)
+        return data_container
+
+    def _re_init(self, index):
+        self.row_list, self.col_list = self._get_data_from_excel(index)
+        self._check_title_cell()
+        self.row_list, self.col_list = self._get_data_from_excel(index)
+
+        self.row_amount = len(self.row_list)
+        self.col_amount = len(self.col_list)
+
+        self.index_row_amount, self.index_col_amount = None, None
+        (self.index_row_amount,
+         self.index_col_amount) = (self.row_amount -
+                                   self._count_row_data_length(index),
+                                   self.col_amount -
+                                   self._count_col_data_length(index))
+
     def _make_csv_path(self):
-        """Making the path for saving csv file and return it.
-
-        For saving csv files, this method will make a folder named
-        with the name of excel file under that file's folder, and
-        return the absolute path of the new folder.
-
-        Returns:
-            csv_path (str): the absolute path which csv file
-                would be saved in.
-
-        """
         file_dirname = os.path.dirname(self.file_path) + os.sep
         csv_path = (file_dirname +
                     os.path.splitext(self.file_name)[0] + os.sep)
@@ -248,36 +271,41 @@ class Excel2csv(object):
             os.mkdir(csv_path)
         return csv_path
 
-    def _csv_from_sheet(self, book_name, sheet_name):
-        """Writing contents in the new csv file and save it.
-
-        This method will read contents from a sheet in the excel file,
-        then write it in a new csv file by line and save it.
-
-        Params:
-            book_name (str): The workbook's name from a excel file.
-            sheet_name (str): The name of a sheet in a workbook.
-
-        """
+    def _csv_from_sheet(self, book_name, sheet_name, index):
+        self.row_list, self.col_list = self._get_data_from_excel(index)
+        self._check_title_cell()
+        csv_name = self.title + "_" + sheet_name + ".csv"
         sheet = book_name.sheet_by_name(sheet_name)
-        csv_name = sheet_name + '.csv'
         with open(self._make_csv_path() + csv_name, 'w',
                   newline='', encoding='cp932') as csv_file:
             writer = csv.writer(csv_file, delimiter=',',
                                 quotechar='|',
                                 quoting=csv.QUOTE_MINIMAL)
-            for row_num in range(sheet.nrows):
-                writer.writerow(sheet.row_values(row_num))
+            if sheet.nrows > 1 and sheet.ncols > 1:
+                self._re_init(index)
+                rows = self._make_btf_sheet()
+                for i in range(len(rows)):
+                    writer.writerow(rows[i])
+            elif sheet.nrows > 1 and sheet.ncols == 1:
+                for i in range(sheet.nrows):
+                    writer.writerow(sheet.row_values(i))
+            elif sheet.nrows == 1 and sheet.ncols > 1:
+                writer.writerow(sheet.row_values(0))
+            elif not sheet.nrows:
+                writer.writerow([])
 
     def csv_from_excel(self):
         book = xlrd.open_workbook(self.file_path)
         sheet_names = book.sheet_names()
         for sheet_name in sheet_names:
-            self._csv_from_sheet(book, sheet_name)
+            self._csv_from_sheet(book, sheet_name, sheet_names.index(sheet_name))
 
 
 def main():
     e2c = Excel2csv(None)
+
+    """
+    e2c._re_init(0)
 
     print("このテーブルには", e2c.row_amount, "行があり、",
           e2c.col_amount, "列がある.")
@@ -290,6 +318,11 @@ def main():
     print("インデックス列の内容は、", e2c._get_index_cols())
     print("インデックス列には、", len(e2c._get_index_cols()), "個セルがある.")
     print("このテーブルのタイトルは、", e2c.title, "です.")
+
+    print(e2c._make_btf_sheet())
+    """
+
+    e2c.csv_from_excel()
 
 
 if __name__ == '__main__':

@@ -22,8 +22,8 @@ class FileDropTarget(wx.FileDropTarget):
         self.window = window
 
     def OnDropFiles(self, x, y, file_names):
-        excel2csv = Excel2csv(str(file_names[0]))
-        excel2csv.csv_from_excel()
+        e2c = Excel2csv(str(file_names[0]))
+        e2c.csv_from_excel()
         return True
 
 
