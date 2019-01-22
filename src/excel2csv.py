@@ -4,6 +4,8 @@ import sys
 import os
 import csv
 import xlrd
+import copy
+import re
 from collections import Counter as CoT
 
 
@@ -21,14 +23,18 @@ def _get_data_from_sheet(book_name, sheet_name,
 
 
 def _count_aline_data_length(data, index):
-    pop_num = 0
-    data_length = len(data[index])
-    while type(data[index][0]) is not float:
-        data[index].pop(0)
-        pop_num += 1
-        if not data[index]:
-            break
-    return data_length - pop_num
+    num = 0
+    data_len = len(data[index])
+    data_copy = copy.deepcopy(data[index])
+    for item in data_copy:
+        if type(item) is not float:
+            num += 1
+        else:
+            if type(data_copy[data_copy.index(item) + 1]) is float:
+                break
+            else:
+                num += 1
+    return data_len - num
 
 
 def _del_repeat(lst):
@@ -38,13 +44,40 @@ def _del_repeat(lst):
     return lst
 
 
-def _del_blank_mbr(lst):
+def _u3000_killer(lst):
+    while '\u3000' in lst:
+        lst[lst.index('\u3000')] = ''
+    return lst
+
+
+def _del_blank_cell(lst):
+    while '' in lst:
+        lst.remove('')
+    return lst
+
+
+def _del_blank_list(lst):
+    while [] in lst:
+        lst.remove([])
+    return lst
+
+
+def _del_blank_cell_at_start(lst):
+    lst_copy = copy.deepcopy(lst)
+    result = []
+    for item in lst_copy:
+        num = 0
+        while not item[0]:
+            item.remove('')
+            num += 1
+        result.append(num)
+    result.sort()
+    if not min(result):
+        result = result[1]
+    else:
+        result = min(result)
     for item in lst:
-        try:
-            while not item:
-                del lst[lst.index(item)]
-        except ValueError:
-            break
+        del item[:result]
     return lst
 
 
@@ -57,271 +90,332 @@ class Excel2csv(object):
             self.file_path = os.path.abspath(file_name)
         else:
             raise RuntimeError('No path or filename')
-
         self.file_name = os.path.basename(self.file_path)
 
-    def _get_data_from_excel(self, index):
-        row_data, col_data = [], []
+        self.result = self._get_data_from_excel()
+        self.comment, self.data = {}, {}
+        self.index_row, self.index_col = {}, {}
+
+    def _get_data_from_excel(self):
+        result = {}
         book = xlrd.open_workbook(self.file_path)
         sheet_names = book.sheet_names()
-        _get_data_from_sheet(book, sheet_names[index],
-                             "row", row_data)
-        _get_data_from_sheet(book, sheet_names[index],
-                             "col", col_data)
-        return row_data, col_data
+        for index in range(len(sheet_names)):
+            rows, cols = [], []
+            _get_data_from_sheet(book, sheet_names[index],
+                                 "row", rows)
+            _get_data_from_sheet(book, sheet_names[index],
+                                 "col", cols)
+            result[sheet_names[index]] = [rows, cols]
+        return result
 
-    def _count_row_data_length(self, col_index):
-        if not self.index_row_amount:
-            row_data_lengths = []
-            if self.col_list and self.col_amount:
-                data = self.col_list[:]
-                for index in range(self.col_amount):
-                    row_data_lengths.append(
-                        _count_aline_data_length(data, index))
-                self.col_list = self._get_data_from_excel(col_index)[1]
-                result = CoT(row_data_lengths).most_common()
-                if not result[0][0]:
-                    return result[1][0]
-                else:
-                    return result[0][0]
-            else:
-                print("No col data or col length in the obj!")
+    def _get_title_from_sheet(self, sheet_name):
+        if self.result[sheet_name]:
+            row_result, col_result = [], []
 
-    def _count_col_data_length(self, row_index):
-        if not self.index_col_amount:
-            col_data_lengths = []
-            if self.row_list and self.row_amount:
-                data = self.row_list[:]
-                for index in range(self.row_amount):
-                    col_data_lengths.append(
-                        _count_aline_data_length(data, index))
-                self.row_list = self._get_data_from_excel(row_index)[0]
-                result = CoT(col_data_lengths).most_common()
-                if not result[0][0]:
-                    return result[1][0]
-                else:
-                    return result[0][0]
-            else:
-                print("No row data or row length in the obj!")
-
-    def _check_title_cell(self):
-        if self.col_list:
-            _del_blank_mbr(_del_repeat(self.col_list[0]))
-            title = ""
-            if not self.col_list[0]:
-                _del_blank_mbr(self.row_list[0])
-                if len(self.row_list[0]) == 1 and self.row_list[0][0] != '':
-                    title = self.row_list[0][0]
-            elif self.col_list[0][0] == self.row_list[0][0]:
-                title = self.row_list[0][0]
-            else:
-                title = "No title"
-            self.title = title
-        else:
-            title = "No title"
-            self.title = title
-
-    def _get_index_rows(self):
-        cols, blank_col_amount_list = [], []
-        for index in range(self.index_col_amount, self.col_amount):
-            cols.append(self.col_list[index][0:self.index_row_amount])
-        for col in cols:
-            for item in col:
-                if item == self.title:
-                    col[col.index(item)] = ''
-        for col in cols:
-            blank_col_count = 0
-            for item in col:
-                if not item:
-                    blank_col_count += 1
-                else:
-                    blank_col_amount_list.append(blank_col_count)
-                    break
-        blank_col_amount_list = _del_repeat(blank_col_amount_list)
-        blank_col_amount_list.sort()
-        for col in cols:
-            if min(blank_col_amount_list) != 0:
-                del col[:min(blank_col_amount_list)]
-            else:
-                for index in range(blank_col_amount_list[1]):
-                    if not col[index]:
-                        col.pop(index)
-            while not col[-1]:
-                col.pop()
-                if not col:
-                    break
-        cols = _del_blank_mbr(cols)
-        for col in cols:
-            for index in range(len(col)):
-                if not col[index]:
-                    col[index] = cols[cols.index(col) - 1][index]
+            rows = self.result[sheet_name][0]
+            for row in rows:
+                _u3000_killer(row)
+            for row in rows:
+                if not any(row):
+                    rows.remove(row)
+            rows_copy = copy.deepcopy(rows)
+            for item in rows_copy:
+                _del_blank_cell(item)
+            for row in rows_copy:
+                if len(row) == 1:
+                    row_result.append(row[0])
+                elif len(row) == 2:
+                    for item in row:
+                        row_result.append(item)
                 else:
                     break
-        lst = []
-        for col in cols:
-            col_new = []
-            for item in col:
-                if type(item) is float:
-                    col_new.append(str(item))
-                else:
-                    col_new.append(item)
-            s = "_".join(col_new)
-            lst.append(s)
-            del s, col_new
-        return lst
+            for item in row_result:
+                for row in rows:
+                    if item in row:
+                        rows.remove(row)
 
-    def _get_index_cols(self):
-        rows, blank_row_amount_list = [], []
-        for row in self.row_list:
-            rows.append(row[:self.index_col_amount])
-        for row in rows:
-            for item in row:
-                if item == self.title:
-                    row[row.index(item)] = ''
-        for row in rows:
-            blank_row_count = 0
-            for item in row:
-                if not item:
-                    blank_row_count += 1
+            cols = self.result[sheet_name][1]
+            for col in cols:
+                _u3000_killer(col)
+            for col in cols:
+                if not any(col):
+                    cols.remove(col)
+            cols_copy = copy.deepcopy(cols)
+            for item in cols_copy:
+                _del_blank_cell(item)
+            for col in cols_copy:
+                if len(col) == 1:
+                    col_result.append(col[0])
                 else:
-                    blank_row_amount_list.append(blank_row_count)
                     break
-        blank_row_amount_list = _del_repeat(blank_row_amount_list)
-        blank_row_amount_list.sort()
-        for row in rows:
-            if min(blank_row_amount_list) != 0:
-                del row[:min(blank_row_amount_list)]
+            for item in col_result:
+                for col in cols:
+                    if item in col:
+                        cols.remove(col)
+
+            if sheet_name not in self.comment:
+                self.comment[sheet_name] = []
+                for item in row_result:
+                    self.comment[sheet_name].append(item)
+                for item in col_result:
+                    self.comment[sheet_name].append(item)
+
+            for col in cols:
+                for member in self.comment[sheet_name]:
+                    if member in col:
+                        col[col.index(member)] = ''
+
+            _del_blank_cell_at_start(rows)
+            _del_blank_cell_at_start(cols)
+
+            return _del_repeat(row_result + col_result)
+
+    def _get_comment_from_end_of_sheet(self, sheet_name):
+        if self.result[sheet_name]:
+            row_result = []
+            rows = self.result[sheet_name][0]
+            for row in rows:
+                if not any(row):
+                    rows.remove(row)
+            rows_copy = copy.deepcopy(rows)
+            for item in rows_copy:
+                _del_blank_cell(item)
+            for row in rows_copy:
+                if (len(row) == 1 and
+                        len(rows_copy[rows_copy.index(row)]) > 1):
+                    row_result.append(row[0])
+            for item in row_result:
+                for row in rows:
+                    if item in row:
+                        rows.remove(row)
+            if sheet_name in self.comment:
+                for item in row_result:
+                    self.comment[sheet_name].append(item)
+                _del_repeat(self.comment[sheet_name])
+            return row_result
+
+    def _count_row_data_length(self, sheet_name):
+        result = []
+        rows = self.result[sheet_name][0]
+        rows_copy = copy.deepcopy(rows)
+        if rows_copy:
+            for index in range(len(rows_copy)):
+                result.append(_count_aline_data_length(rows_copy,
+                                                       index))
+            result = CoT(result).most_common()
+            if not result[0][0] and result[0][1] == result[1][1]:
+                return result[1][0]
             else:
-                for index in range(blank_row_amount_list[1]):
-                    if not row[index]:
-                        row.pop(index)
-            while not row[-1]:
-                row.pop()
-                if not row:
-                    break
-        rows = _del_blank_mbr(rows)
-        for row in rows:
+                return result[0][0]
+
+    def _count_col_data_length(self, sheet_name):
+        result = []
+        cols = self.result[sheet_name][1]
+        cols_copy = copy.deepcopy(cols)
+        if cols_copy:
+            for index in range(len(cols_copy)):
+                result.append(_count_aline_data_length(cols_copy,
+                                                       index))
+            result = CoT(result).most_common()
+            if not result[0][0] and result[0][1] == result[1][1]:
+                return result[1][0]
+            else:
+                return result[0][0]
+
+    def _make_index_rows(self, sheet_name):
+        container = []
+        rows = self.result[sheet_name][0]
+        rows_copy = copy.deepcopy(rows)
+        rows_len = len(rows_copy[0])
+        row_data_len = self._count_row_data_length(sheet_name)
+        row_index_len = rows_len - row_data_len
+        for row in rows_copy:
+            container.append(row[:row_index_len])
+        container = list(filter(any, container))
+        _del_blank_cell_at_start(container)
+        for row in container:
             for index in range(len(row)):
                 if not row[index]:
-                    row[index] = rows[rows.index(row) - 1][index]
+                    row[index] = container[container.index(row) - 1][index]
                 else:
                     break
-        for row in rows:
-            _del_blank_mbr(row)
-        lst = []
-        for row in rows:
-            row_new = []
+        con_copy = copy.deepcopy(container)
+        del container
+        for row in con_copy:
+            if '\u3000' in row:
+                row.remove('\u3000')
+        container = list(filter(any, con_copy))
+        tmp2, result = [], []
+        for row in container:
+            tmp = []
             for item in row:
                 if type(item) is float:
-                    row_new.append(str(item))
+                    tmp.append(str(int(item)))
                 else:
-                    row_new.append(item)
-            s = "_".join(row_new)
-            lst.append(s)
-            del s, row_new
-        # diff = self.row_amount - self.index_row_amount - len(lst)
-        # if diff != 0:
-        #     for i in range(diff):
-        #        lst = [""] + lst
-        return lst
+                    tmp.append(item)
+            s = "_".join(tmp)
+            tmp2.append(s)
+        for item in tmp2:
+            if item.find("\n") != -1:
+                item = re.sub(r"\n", " ", item)
+            if item.endswith("_"):
+                result.append(item.rstrip("_"))
+            elif item.startswith("_"):
+                result.append(item.lstrip("_"))
+            else:
+                result.append(item)
+        if sheet_name not in self.index_row:
+            self.index_row[sheet_name] = result
+        return result
 
-    def _get_data_rows(self):
-        data_rows = []
-        for index in range(self.index_row_amount, self.row_amount):
-            data_rows.append(self.row_list[index][self.index_col_amount:])
-        return data_rows
-
-    def _make_btf_sheet(self):
-        index_row = self._get_index_rows()  # [str * n]
-        index_col = self._get_index_cols()  # [str * n]
-        data_rows = [index_row] + self._get_data_rows()  # [list * n]
-        data_container = []
-        for row in data_rows:
-            if index_col:
-                for item in index_col:
-                    row = [item] + row
-                    data_container.append(row)
-                    index_col.pop(0)
+    def _make_index_cols(self, sheet_name):
+        container = []
+        cols = self.result[sheet_name][1]
+        cols_copy = copy.deepcopy(cols)
+        cols_len = len(cols_copy[0])
+        col_data_len = self._count_col_data_length(sheet_name)
+        col_index_len = cols_len - col_data_len
+        for col in cols_copy:
+            container.append(col[:col_index_len])
+        container = list(filter(any, container))
+        for col in container:
+            for member in self.comment[sheet_name]:
+                if member in col:
+                    col[col.index(member)] = ''
+        _del_blank_cell_at_start(container)
+        for col in container:
+            for index in range(len(col)):
+                if not col[index]:
+                    col[index] = container[container.index(col) - 1][index]
+                else:
                     break
-            elif data_rows:
-                row = [""] + row
-                data_container.append(row)
-        return data_container
+        con_copy = copy.deepcopy(container)
+        del container
+        for col in con_copy:
+            if '\u3000' in col:
+                col.remove('\u3000')
+        container = list(filter(any, con_copy))
+        tmp2, result = [], []
+        for col in container:
+            tmp = []
+            for item in col:
+                if type(item) is float:
+                    tmp.append(str(int(item)))
+                else:
+                    tmp.append(item)
+            s = "_".join(tmp)
+            tmp2.append(s)
+        for item in tmp2:
+            if item.find("\n") != -1:
+                item = re.sub(r"\n", " ", item)
+            if item.endswith("_"):
+                result.append(item.rstrip("_"))
+            elif item.startswith("_"):
+                result.append(item.lstrip("_"))
+            else:
+                result.append(item)
+        if sheet_name not in self.index_col:
+            self.index_col[sheet_name] = result
+        return result
 
-    def _re_init(self, index):
-        self.row_list, self.col_list = self._get_data_from_excel(index)
-        self._check_title_cell()
-        self.row_list, self.col_list = self._get_data_from_excel(index)
-
-        self.row_amount = len(self.row_list)
-        self.col_amount = len(self.col_list)
-
-        self.index_row_amount, self.index_col_amount = None, None
-        (self.index_row_amount,
-         self.index_col_amount) = (self.row_amount -
-                                   self._count_row_data_length(index),
-                                   self.col_amount -
-                                   self._count_col_data_length(index))
+    def _make_data_rows(self, sheet_name):
+        container = []
+        rows = self.result[sheet_name][0]
+        cols = self.result[sheet_name][1]
+        rows_len = len(rows[0])
+        cols_len = len(cols[0])
+        for row in rows[(cols_len -
+                         self._count_col_data_length(sheet_name)):]:
+            container.append(row[(rows_len -
+                                  self._count_row_data_length(sheet_name)):])
+        if sheet_name not in self.data:
+            self.data[sheet_name] = container
+        return container
 
     def _make_csv_path(self):
-        file_dirname = os.path.dirname(self.file_path) + os.sep
-        csv_path = (file_dirname +
+        file_dir_name = os.path.dirname(self.file_path) + os.sep
+        csv_path = (file_dir_name +
                     os.path.splitext(self.file_name)[0] + os.sep)
         if not os.path.exists(csv_path):
             os.mkdir(csv_path)
         return csv_path
 
-    def _csv_from_sheet(self, book_name, sheet_name, index):
-        self.row_list, self.col_list = self._get_data_from_excel(index)
-        self._check_title_cell()
-        csv_name = self.title + "_" + sheet_name + ".csv"
-        sheet = book_name.sheet_by_name(sheet_name)
+    def _make_uncover_list(self, item):
+        with open(self._make_csv_path() + "uncovered.txt", 'a+',
+                  newline='', encoding='utf-8') as uncover_list:
+            uncover_list.write(item + "\n")
+
+    def _make_btf_sheet(self):
+        self._get_data_from_excel()
+        container, zero_group, one_group = {}, [], []
+        for key in self.result:
+            container[key] = []
+            for item in self.result[key]:
+                container[key].append(len(item))
+        print(container)
+        for key in container:
+            if not container[key][0] or not container[key][1]:
+                zero_group.append(key)
+            elif container[key][0] == 1 or container[key][1] == 1:
+                one_group.append(key)
+        for key in self.result:
+            if key in zero_group or key in one_group:
+                self._make_uncover_list(key)
+            else:
+                self._get_title_from_sheet(key)
+                self._get_comment_from_end_of_sheet(key)
+                self._make_index_rows(key)
+                self._make_index_cols(key)
+                self._make_data_rows(key)
+                print(self.comment[key],
+                      self.index_row[key],
+                      self.index_col[key],
+                      self.data[key], sep="\n")
+
+    def _csv_from_sheet(self, sheet_name):
+        csv_name = sheet_name + ".csv"
         with open(self._make_csv_path() + csv_name, 'w',
                   newline='', encoding='cp932') as csv_file:
             writer = csv.writer(csv_file, delimiter=',',
                                 quotechar='|',
                                 quoting=csv.QUOTE_MINIMAL)
-            if sheet.nrows > 1 and sheet.ncols > 1:
-                self._re_init(index)
-                rows = self._make_btf_sheet()
-                for i in range(len(rows)):
-                    writer.writerow(rows[i])
-            elif sheet.nrows > 1 and sheet.ncols == 1:
-                for i in range(sheet.nrows):
-                    writer.writerow(sheet.row_values(i))
-            elif sheet.nrows == 1 and sheet.ncols > 1:
-                writer.writerow(sheet.row_values(0))
-            elif not sheet.nrows:
-                writer.writerow([])
+            writer.writerow(self.comment[sheet_name][0:1])
+            writer.writerow(self.comment[sheet_name][1:])
+            writer.writerow(self.index_col[sheet_name])
+            print(len(self.index_row[sheet_name]),
+                  len(self.data[sheet_name]))
+            if (len(self.index_row[sheet_name])
+                    > len(self.data[sheet_name])):
+                for index in range(len(self.data[sheet_name])):
+                    self.data[sheet_name][index].insert(0,
+                                                        self.index_row[sheet_name][index + 1])
+                for item in self.data[sheet_name]:
+                    writer.writerow(item)
+            elif (len(self.index_row[sheet_name])
+                  == len(self.data[sheet_name])):
+                if self.index_row[sheet_name][0] != self.index_col[sheet_name][0]:
+                    for index in range(len(self.data[sheet_name])):
+                        self.data[sheet_name][index].insert(0,
+                                                            self.index_row[sheet_name][index])
+                else:
+                    for index in range(len(self.data[sheet_name])):
+                        if index != len(self.data[sheet_name]) - 1:
+                            self.data[sheet_name][index].insert(0,
+                                                                self.index_row[sheet_name][index + 1])
+                        else:
+                            break
+                for item in self.data[sheet_name]:
+                    writer.writerow(item)
 
     def csv_from_excel(self):
-        book = xlrd.open_workbook(self.file_path)
-        sheet_names = book.sheet_names()
-        for sheet_name in sheet_names:
-            self._csv_from_sheet(book, sheet_name, sheet_names.index(sheet_name))
+        self._make_btf_sheet()
+        for key in self.comment:
+            self._csv_from_sheet(key)
 
 
 def main():
     e2c = Excel2csv(None)
-
-    """
-    e2c._re_init(0)
-
-    print("このテーブルには", e2c.row_amount, "行があり、",
-          e2c.col_amount, "列がある.")
-    print("上から", e2c.index_row_amount, "番目までの行と、",
-          e2c.index_col_amount, "番目までの列はインデックス.")
-
-    print("インデックス行の内容は、", e2c._get_index_rows())
-    print("インデックス行には、", len(e2c._get_index_rows()), "個セルがある.")
-
-    print("インデックス列の内容は、", e2c._get_index_cols())
-    print("インデックス列には、", len(e2c._get_index_cols()), "個セルがある.")
-    print("このテーブルのタイトルは、", e2c.title, "です.")
-
-    print(e2c._make_btf_sheet())
-    """
-
     e2c.csv_from_excel()
 
 

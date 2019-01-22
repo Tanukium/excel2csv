@@ -50,7 +50,7 @@ class MyFrame(wx.Frame):
         sizer_1.Add((400, 120), 0, wx.EXPAND, 0)
 
         label_1 = wx.StaticText(self, wx.ID_ANY,
-                                u"こちらにExcelファイルをドラッグインしてください",
+                                u"この文字に合わせてExcelファイルをドラッグ＆ドロップ",
                                 style=wx.ALIGN_CENTER)
         label_1.SetMinSize((400, 20))
         label_1.SetFont(wx.Font(13, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
