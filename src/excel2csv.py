@@ -84,10 +84,10 @@ def _del_blank_cell_at_start(lst):
 class Excel2csv(object):
 
     def __init__(self, file_name):
-        if len(sys.argv) > 1 and sys.argv[1]:
-            self.file_path = os.path.abspath(sys.argv[1])
-        elif file_name:
+        if file_name:
             self.file_path = os.path.abspath(file_name)
+        elif len(sys.argv) > 1 and sys.argv[1]:
+            self.file_path = os.path.abspath(sys.argv[1])
         else:
             raise RuntimeError('No path or filename')
         self.file_name = os.path.basename(self.file_path)
@@ -368,7 +368,8 @@ class Excel2csv(object):
                 self._make_index_rows(key)
                 self._make_index_cols(key)
                 self._make_data_rows(key)
-                print(self.comment[key],
+                print(key,
+                      self.comment[key],
                       self.index_row[key],
                       self.index_col[key],
                       self.data[key], sep="\n")
