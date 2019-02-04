@@ -41,7 +41,7 @@ class MyFrame(wx.Frame):
 
     def __set_properties(self):
         # begin wxGlade: MyFrame.__set_properties
-        self.SetTitle("TestTool")
+        self.SetTitle("Excel->CSV直行便")
         # end wxGlade
 
     def __do_layout(self):
