@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 
+#############################################################
 """
 【プログラム名】Excel→CSV直行便
 【モジュール名】excel2csv.py
@@ -17,6 +18,7 @@
 【最終更新】2019/02/05 AM03:00:00 -> 作成日と最終更新は, Gitの履歴に於いて閲覧できる.
 【作成者】シュクメイスイ（長野大学前川ゼミ）
 """
+#############################################################
 
 import sys
 import os
@@ -36,16 +38,17 @@ import re
 # 正規表現機能を提供するライブラリ.
 # sub()メソッドを用いて, 特定の文字列をマッチして書き替えられる.
 from collections import Counter as CoT
-
-
 # リストにおける要素の出現個数を統計するライブラリ.
 # most_common()メソッドは出現個数の最頻値を返す.
 
 
+#############################################################
+# Excelファイルから行または列ごとにセル群を読み取り返却する
+#
 def _get_data_from_sheet(book_name, sheet_name,
                          switch, container):
     """
-    Excelファイルのワークシートから行または列ごとに一行分か一列分のセルらを読み取り,
+    Excelファイルのワークシートから行または列ごとに一行分か一列分のセル群を読み取り,
     containerに入れて値として返すメソッド.
     containerは次のような形のものである:
     [[cell1, cell2, cell3, ...], [cell1, cell2, cell3, ...], ...]
@@ -72,6 +75,9 @@ def _get_data_from_sheet(book_name, sheet_name,
     return container
 
 
+#############################################################
+# リストの個数計算、コピー作成
+#
 def _count_aline_data_length(data, index):
     """
     一行分か一列分のセルを含めるリストのサイズ（要素の個数）を計算し,
@@ -102,6 +108,9 @@ def _count_aline_data_length(data, index):
     return data_len - num
 
 
+#############################################################
+# リストの重複要素を一個だけにする
+#
 def _del_repeat(lst):
     """
     とあるlistにおける重複（2個以上存在する）の要素を,
@@ -115,6 +124,9 @@ def _del_repeat(lst):
     return lst
 
 
+#############################################################
+# UTF-8の特殊スペースを文字列に入れ替える
+#
 def _u3000_killer(lst):
     """
     とあるlistにおける全部の'\u3000'
@@ -128,6 +140,9 @@ def _u3000_killer(lst):
     return lst
 
 
+#############################################################
+# リスト中の空白を削除する
+#
 def _del_blank_cell(lst):
     """
     とあるlistにおける全部の空白の文字列（''）要素を削除するメソッド.
@@ -141,6 +156,9 @@ def _del_blank_cell(lst):
     return lst
 
 
+#############################################################
+# リスト中の全ての空白を削除する
+#
 def _del_blank_list(lst):
     """
     とあるlistにおける全部の空白のlist要素（[]）を削除するメソッド.
@@ -152,6 +170,9 @@ def _del_blank_list(lst):
     return lst
 
 
+#############################################################
+# リスト初めの空白文字列を削除する
+#
 def _del_blank_cell_at_start(lst):
     """
     空白の文字列要素を含めるlist要素を含めるlistにおける,
@@ -165,9 +186,9 @@ def _del_blank_cell_at_start(lst):
     listにおける各list要素の始めから,
     先ほど取り出した個数要素分の空白文字列要素を削除してから,
     各list要素を含めるlistを値として返す.
-    例えば, [["", 1, 2], ["", "", 5], [6, 7, 8]]の場合,
+    例えば, [["", 1, 2, 3], ["", "", 6, 7], ["", "", "", 11]]の場合,
     このメソッドを使用し返された値は
-    [["", 1, 2], ["", 5], [6, 7, 8]]のはずである.
+    [[1, 2, 3], ["", 6, 7], ["", "", 11]]のはずである.
     :param lst: (list) メソッドが応用するlist.
     :return: (list) 空白の文字列要素を含めるlist要素を含めるlistが,
     list要素のはじめにある余った空白の文字列要素を削除するメソッド.
@@ -196,6 +217,9 @@ def _del_blank_cell_at_start(lst):
     return lst
 
 
+#############################################################
+# ExcelファイルをCSVファイルに整形するクラス
+#
 class Excel2csv(object):
     """
     Excelファイルを整形されたCSVファイルに転換する.
@@ -214,6 +238,9 @@ class Excel2csv(object):
     :arg index_col: (dict) 同index_row.
     """
 
+    #############################################################
+    # 新たなExcel2csvオブジェクトを初期化する
+    #
     def __init__(self, file_name):
         """
         新たなExcel2csvオブジェクトを初期化するメソッド.
@@ -240,6 +267,9 @@ class Excel2csv(object):
         self.comment, self.data = {}, {}
         self.index_row, self.index_col = {}, {}
 
+    #############################################################
+    # Excelファイルからシートごとにセル内容を読み取り返却する
+    #
     def _get_data_from_excel(self):
         """
         _get_data_from_sheet()を使用し,
@@ -262,6 +292,9 @@ class Excel2csv(object):
             result[sheet_names[index]] = [rows, cols]
         return result
 
+    #############################################################
+    # ワークシートからタイトル、コメントを取り出す
+    #
     def _get_title_from_sheet(self, sheet_name):
         """
         Worksheet（のはじめ）からタイトルとコメントを取り出し,
@@ -356,6 +389,9 @@ class Excel2csv(object):
 
             return _del_repeat(row_result + col_result)
 
+    #############################################################
+    # ワークシートからコメントを取り出す
+    #
     def _get_comment_from_end_of_sheet(self, sheet_name):
         """
         Worksheetの全体からコメントを取り出し,
@@ -405,6 +441,9 @@ class Excel2csv(object):
                 _del_repeat(self.comment[sheet_name])
             return row_result
 
+    #############################################################
+    # ワークシートの行の連続データセル個数を返却する
+    #
     def _count_row_data_length(self, sheet_name):
         """
         Worksheetにおける行における連続するデータセルの個数
@@ -437,6 +476,9 @@ class Excel2csv(object):
                 return result[0][0]
                 # そうでない場合, 最頻値の個数の返す.
 
+    #############################################################
+    # ワークシートの列の連続データセル個数を返却する
+    #
     def _count_col_data_length(self, sheet_name):
         """
         Worksheetにおける列における連続するデータセルの個数
@@ -460,6 +502,9 @@ class Excel2csv(object):
             else:
                 return result[0][0]
 
+    #############################################################
+    # ワークシートの行の見出し行を取り出し整形する
+    #
     def _make_index_rows(self, sheet_name):
         """
         Worksheetの見出し行を取り出し, 整形して,
@@ -547,6 +592,9 @@ class Excel2csv(object):
             # sheet_nameというキーの値はresultにする.
         return result
 
+    #############################################################
+    # ワークシートの行の見出し列を取り出し整形する
+    #
     def _make_index_cols(self, sheet_name):
         """
         Worksheetの見出し列を取り出し, 整形して,
@@ -604,9 +652,12 @@ class Excel2csv(object):
             self.index_col[sheet_name] = result
         return result
 
+    #############################################################
+    # ワークシートの行のデータセル群を割り出し返却する
+    #
     def _make_data_rows(self, sheet_name):
         """
-        行ごとにWorksheetにおける行のlistにおけるデータセルらを割り出し,
+        行ごとにWorksheetにおける行のlistにおけるデータセル群を割り出し,
         値として返すメソッド.
         :param sheet_name: (str) worksheetの名前.
         :return: (list) [["data", "data", ...], ["data", ...], ...]
@@ -634,6 +685,9 @@ class Excel2csv(object):
             # sheet_nameというキーの値はcontainerにする.
         return container
 
+    #############################################################
+    # CSVファイル格納フォルダを作成する
+    #
     def _make_csv_path(self):
         """
         出力されるCSVファイルを収納するフォルダを作成するメソッド.
@@ -654,6 +708,9 @@ class Excel2csv(object):
         # それを作成する.
         return csv_path
 
+    #############################################################
+    # CSV変換対象外データ書き込みファイルuncovered.txtを作成する
+    #
     def _make_uncover_list(self, item):
         """
         Workbookにおける転換しないworksheetの名前を含める
@@ -665,6 +722,9 @@ class Excel2csv(object):
                   newline='', encoding='utf-8') as uncover_list:
             uncover_list.write(item + "\n")
 
+    #############################################################
+    # ワークシートの変換可否を判断し、不可対象をファイルに書き込む
+    #
     def _make_btf_sheet(self):
         """
         Workbookにおける処理できるworksheetと
@@ -708,6 +768,9 @@ class Excel2csv(object):
                       self.index_col[key],
                       self.data[key], sep="\n")
 
+    #############################################################
+    # 処理後のattributeからデータを取り出し結合しCSVに書き込む
+    #
     def _csv_from_sheet(self, sheet_name):
         """
         処理されたattributeらからデータを読み取り, 結合し,
@@ -770,6 +833,9 @@ class Excel2csv(object):
                     # CSVに書き込む. 一個の行のlistはCSVファイルの
                     # 一行を占める.
 
+    #############################################################
+    # CSVファイルを出力するコールメソッド
+    #
     def csv_from_excel(self):
         """
         外部から唯一見られるメソッド.
@@ -781,6 +847,9 @@ class Excel2csv(object):
             self._csv_from_sheet(key)
 
 
+#############################################################
+# メイン処理
+#
 def main():
     """
     モジュールではなく, 単独のプログラムとして
