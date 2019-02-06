@@ -542,7 +542,7 @@ class Excel2csv(object):
                 else:
                     break
         # [["上田", "上田", "東部"], ["", "上田", "南部"]]という形のlistを
-        # [["上田", "上田", ""], ["上田", "上田", "南部"]]という形にする.
+        # [["上田", "上田", "東部"], ["上田", "上田", "南部"]]という形にする.
         con_copy = copy.deepcopy(container)
         # container容器のコピーを作る.
         del container
