@@ -11,6 +11,7 @@ import wx
 
 from excel2csv import Excel2csv
 
+
 # begin wxGlade: extracode
 # end wxGlade
 
@@ -23,7 +24,7 @@ class FileDropTarget(wx.FileDropTarget):
 
     def OnDropFiles(self, x, y, file_names):
         e2c = Excel2csv(str(file_names[0]))
-        e2c.csv_from_excel()
+        e2c.output_csv_files()
         return True
 
 
@@ -41,7 +42,7 @@ class MyFrame(wx.Frame):
 
     def __set_properties(self):
         # begin wxGlade: MyFrame.__set_properties
-        self.SetTitle("Excel->CSV直行便")
+        self.SetTitle("Excel->CSV直行便 v1.00")
         # end wxGlade
 
     def __do_layout(self):

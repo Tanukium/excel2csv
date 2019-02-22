@@ -18,7 +18,9 @@ def main():
     print(names)
     for name in names:
         e2c = Excel2csv(name)
-        e2c.csv_from_excel()
+        e2c.output_csv_files()
+        print("{} was reformatted.".format(name))
+    print("All files in list was reformatted.")
 
 
 if __name__ == '__main__':
