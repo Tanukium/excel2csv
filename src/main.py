@@ -28,10 +28,10 @@ class FileDropTarget(wx.FileDropTarget):
         return True
 
 
-class MyFrame(wx.Frame):
+class E2cFrame(wx.Frame):
 
     def __init__(self, *args, **kwds):
-        # begin wxGlade: MyFrame.__init__
+        # begin wxGlade: E2cFrame.__init__
         kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
         self.SetSize((400, 300))
@@ -41,12 +41,12 @@ class MyFrame(wx.Frame):
         # end wxGlade
 
     def __set_properties(self):
-        # begin wxGlade: MyFrame.__set_properties
+        # begin wxGlade: E2cFrame.__set_properties
         self.SetTitle("Excel->CSV直行便 v1.00")
         # end wxGlade
 
     def __do_layout(self):
-        # begin wxGlade: MyFrame.__do_layout
+        # begin wxGlade: E2cFrame.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_1.Add((400, 120), 0, wx.EXPAND, 0)
 
@@ -67,19 +67,19 @@ class MyFrame(wx.Frame):
         # end wxGlade
 
 
-# end of class MyFrame
+# end of class E2cFrame
 
-class MyApp(wx.App):
+class E2cApp(wx.App):
 
     def OnInit(self):
-        self.frame = MyFrame(None, wx.ID_ANY, "")
+        self.frame = E2cFrame(None, wx.ID_ANY, "")
         self.SetTopWindow(self.frame)
         self.frame.Show()
         return True
 
 
-# end of class MyApp
+# end of class E2cApp
 
 if __name__ == "__main__":
-    msemiApp = MyApp(0)
+    msemiApp = E2cApp(0)
     msemiApp.MainLoop()
