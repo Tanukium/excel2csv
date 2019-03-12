@@ -3,6 +3,7 @@ import copy
 import re
 import os
 import csv
+import sys
 
 
 def remove_space_strings(row):
@@ -210,7 +211,7 @@ def make_uncover_text_file(path, sheet_name):
 
 def print_warning(sheet_name):
     print("I cannot reformat the sheet named {}!".format(sheet_name),
-          "Maybe there are some graph pics in it.")
+          "Please check its data construction or improve my logic.")
     return None
 
 
@@ -248,8 +249,7 @@ def get_rows_from_sheet(book_name, sheet_name):
             new_sheet.append(new_row)
         return new_sheet
     else:
-        print_warning(sheet_name)
-        return sheet_name
+        return None
 
 
 def get_sheet_names_from_book(book_name):
@@ -281,31 +281,49 @@ class Excel2csv(object):
     def get_content_lists_and_titles_from_book(self):
         csv_path = self.get_csv_path_and_make_folder()
         result = {}
+        uncover_sheets = []
         for sheet_name in self.sheet_names:
             sheet = get_rows_from_sheet(self.book_name, sheet_name)
-            if isinstance(sheet, list):
+            # if isinstance(sheet, list):
+            #     sheet = data_pretreatment(sheet)
+            #     if sheet:
+            #         titles = get_title_and_comment(sheet)
+            #         sheet = remove_rows_contained_title_and_comment(sheet, titles)
+            #         index_length = get_size_of_index_area(sheet)
+            #         index_area = get_index_lists(sheet, index_length)
+            #         index_row = get_index_row_contained_strings(index_area)
+            #         index_row = reformat_index_row(index_row)
+            #         content_lists = get_content_lists(sheet, index_row, index_length)
+            #         result[sheet_name] = [content_lists, titles]
+            #     else:
+            #         print_warning(sheet_name)
+            #         make_uncover_text_file(csv_path, sheet_name)
+            #         result[sheet_name] = None
+            # else:
+            #     make_uncover_text_file(csv_path, sheet)
+            #     result[sheet_name] = None
+            try:
                 sheet = data_pretreatment(sheet)
-                if sheet:
-                    titles = get_title_and_comment(sheet)
-                    sheet = remove_rows_contained_title_and_comment(sheet, titles)
-                    index_length = get_size_of_index_area(sheet)
-                    index_area = get_index_lists(sheet, index_length)
-                    index_row = get_index_row_contained_strings(index_area)
-                    index_row = reformat_index_row(index_row)
-                    content_lists = get_content_lists(sheet, index_row, index_length)
-                    result[sheet_name] = [content_lists, titles]
-                else:
-                    print_warning(sheet_name)
-                    make_uncover_text_file(csv_path, sheet_name)
-                    result[sheet_name] = None
-            else:
-                make_uncover_text_file(csv_path, sheet)
+                titles = get_title_and_comment(sheet)
+                sheet = remove_rows_contained_title_and_comment(sheet, titles)
+                index_length = get_size_of_index_area(sheet)
+                index_area = get_index_lists(sheet, index_length)
+                index_row = get_index_row_contained_strings(index_area)
+                index_row = reformat_index_row(index_row)
+                content_lists = get_content_lists(sheet, index_row, index_length)
+                result[sheet_name] = [content_lists, titles]
+            except:
+                print_warning(sheet_name)
+                make_uncover_text_file(csv_path, sheet_name)
                 result[sheet_name] = None
-        return result
+                uncover_sheets.append(sheet_name)
+            else:
+                pass
+        return result, uncover_sheets
 
     def output_csv_files(self):
         csv_path = self.get_csv_path_and_make_folder()
-        csv_source = self.get_content_lists_and_titles_from_book()
+        csv_source, uncover_sheets = self.get_content_lists_and_titles_from_book()
         for sheet_name in self.sheet_names:
             csv_name = sheet_name + ".csv"
             if csv_source[sheet_name]:
@@ -325,15 +343,15 @@ class Excel2csv(object):
                         writer.writerow(row)
             else:
                 pass
-        return None
+        return uncover_sheets
 
 
 def main():
-    # e2c = Excel2csv(None)
+    e2c = Excel2csv(sys.argv[1])
     # con = e2c.get_content_lists_and_titles_from_book()
     # print(con)
-    # e2c.output_csv_files()
-    pass
+    e2c.output_csv_files()
+    return None
 
 
 if __name__ == "__main__":
