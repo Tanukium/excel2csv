@@ -24,7 +24,7 @@ class FileDropTarget(wx.FileDropTarget):
 
     def OnDropFiles(self, x, y, file_names):
         e2c = Excel2csv(str(file_names[0]))
-        e2c.output_csv_files()
+        uncover_list = e2c.output_csv_files()
         return True
 
 
@@ -42,7 +42,7 @@ class E2cFrame(wx.Frame):
 
     def __set_properties(self):
         # begin wxGlade: E2cFrame.__set_properties
-        self.SetTitle("Excel->CSV直行便 v1.00")
+        self.SetTitle("Excel->CSV直行便 v1.01")
         # end wxGlade
 
     def __do_layout(self):

@@ -350,7 +350,7 @@ def main():
     e2c = Excel2csv(sys.argv[1])
     # con = e2c.get_content_lists_and_titles_from_book()
     # print(con)
-    e2c.output_csv_files()
+    uncover_sheet = e2c.output_csv_files()
     return None
 
 
