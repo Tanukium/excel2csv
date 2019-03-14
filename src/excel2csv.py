@@ -113,11 +113,6 @@ def data_pretreatment(sheet):
 
 def get_size_of_index_area(sheet):
     for r_index, row in enumerate(sheet):
-        # for c_index, cell in enumerate(row):
-        #     if (isinstance(cell, float)
-        #             and isinstance(row[c_index + 1], float)):
-        #         if isinstance(cell, float):
-        #             return r_index
         num = 0
         for cell in row:
             if isinstance(cell, float):
@@ -210,8 +205,9 @@ def make_uncover_text_file(path, sheet_name):
 
 
 def print_warning(sheet_name):
-    print("I cannot reformat the sheet named {}!".format(sheet_name),
-          "Please check its data construction or improve my logic.")
+    print("-" * 8)
+    print("警告： {} というシートは整形されませんでした。".format(sheet_name))
+    print("　　　 そちらのデータ構造か、転換プログラムの論理をチェックしてください。")
     return None
 
 
@@ -226,7 +222,6 @@ def get_merged_cells_value(sheet, row_index, col_index):
             if col_index >= clow and col_index < chigh:
                 cell_value = sheet.cell_value(rlow, clow)
                 return cell_value
-                break
     return None
 
 
@@ -284,24 +279,6 @@ class Excel2csv(object):
         uncover_sheets = []
         for sheet_name in self.sheet_names:
             sheet = get_rows_from_sheet(self.book_name, sheet_name)
-            # if isinstance(sheet, list):
-            #     sheet = data_pretreatment(sheet)
-            #     if sheet:
-            #         titles = get_title_and_comment(sheet)
-            #         sheet = remove_rows_contained_title_and_comment(sheet, titles)
-            #         index_length = get_size_of_index_area(sheet)
-            #         index_area = get_index_lists(sheet, index_length)
-            #         index_row = get_index_row_contained_strings(index_area)
-            #         index_row = reformat_index_row(index_row)
-            #         content_lists = get_content_lists(sheet, index_row, index_length)
-            #         result[sheet_name] = [content_lists, titles]
-            #     else:
-            #         print_warning(sheet_name)
-            #         make_uncover_text_file(csv_path, sheet_name)
-            #         result[sheet_name] = None
-            # else:
-            #     make_uncover_text_file(csv_path, sheet)
-            #     result[sheet_name] = None
             try:
                 sheet = data_pretreatment(sheet)
                 titles = get_title_and_comment(sheet)
@@ -327,11 +304,10 @@ class Excel2csv(object):
         for sheet_name in self.sheet_names:
             csv_name = sheet_name + ".csv"
             if csv_source[sheet_name]:
-                with open(csv_path + csv_name, 'w',
-                          newline='', encoding='cp932', errors='ignore') as csv_file:
+                with open(csv_path + csv_name, 'w', newline='',
+                          encoding='cp932', errors='ignore') as csv_file:
                     writer = csv.writer(csv_file, delimiter=',',
-                                        quotechar='|',
-                                        quoting=csv.QUOTE_MINIMAL)
+                                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
                     output = csv_source[sheet_name][1]
                     if output:
                         writer.writerow(output[:1])

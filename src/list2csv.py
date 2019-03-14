@@ -18,29 +18,44 @@ def make_log(name, path, switch, uncover_sheet):
     log = path + os.sep + "result.log"
     basename = os.path.basename(name)
     with open(log, mode="a+", encoding="UTF-8") as file:
-        if switch:
-            print("{} was reformatted without error.".format(name))
-            file.write("{}, no error\n".format(basename))
-        else:
-            print("{} was reformatted with some error.".format(name))
-            file.write("{}, with error\n".format(basename))
+        if switch == "all":
+            print("-" * 8)
+            print("{} は転換されました。".format(name))
+            file.write("{}, 問題なし\n".format(basename))
+        elif switch == "some":
+            print("-" * 8)
+            print("警告： {} は転換されましたが、".format(name))
+            print("　　　 一部のシートは転換が飛ばされました。")
+            file.write("{}, 一部のシートは問題あり\n".format(basename))
             for sheet in uncover_sheet:
                 file.write("-- {}\n".format(sheet))
+        elif switch == "none":
+            print("-" * 8)
+            print("警告： {} は転換されませんでした。".format(name))
+            print("　　　 リストファイルか、このプログラムの論理をチェックしてください。")
+            file.write("{}, 全体は問題あり\n".format(basename))
     return None
 
 
 def main():
     names, path = names2list(sys.argv[1])
-    print(names)
+    print("今度転換するファイルは以下のものです：")
     for name in names:
-        e2c = Excel2csv(name)
-        uncovered_sheet = e2c.output_csv_files()
-        if uncovered_sheet:
-            make_log(name, path, False, uncovered_sheet)
-        else:
-            make_log(name, path, True, uncovered_sheet)
-    print("All files in list was reformatted.")
-    print("You can check names of error sheets in result.log.")
+        print("{},".format(name))
+    for name in names:
+        try:
+            e2c = Excel2csv(name)
+            uncovered_sheet = e2c.output_csv_files()
+            if uncovered_sheet:
+                make_log(name, path, "some", uncovered_sheet)
+            else:
+                make_log(name, path, "all", uncovered_sheet)
+        except:
+            temp_sheet = []
+            make_log(name, path, "none", temp_sheet)
+    print("-" * 8)
+    print("リストファイルにおける全ての Excel ファイルは転換されました。")
+    print("転換の過程と結果は、{} にて確認できます。".format("result.log"))
     return None
 
 
