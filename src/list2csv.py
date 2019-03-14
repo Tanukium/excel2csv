@@ -20,26 +20,26 @@ def make_log(name, path, switch, uncover_sheet):
     with open(log, mode="a+", encoding="UTF-8") as file:
         if switch == "all":
             print("-" * 8)
-            print("{} は転換されました。".format(name))
-            file.write("{}, 問題なし\n".format(basename))
+            print("{} 変換しました。".format(name))
+            file.write("{}, 正常処理\n".format(basename))
         elif switch == "some":
             print("-" * 8)
-            print("警告： {} は転換されましたが、".format(name))
-            print("　　　 一部のシートは転換が飛ばされました。")
-            file.write("{}, 一部のシートは問題あり\n".format(basename))
+            print("警告： {} 変換しましたが".format(name))
+            print("　　　 一部のワークシートは変換をパスしました。")
+            file.write("{}, 次のワークシートは問題あり\n".format(basename))
             for sheet in uncover_sheet:
                 file.write("-- {}\n".format(sheet))
         elif switch == "none":
             print("-" * 8)
-            print("警告： {} は転換されませんでした。".format(name))
-            print("　　　 リストファイルか、このプログラムの論理をチェックしてください。")
-            file.write("{}, 全体は問題あり\n".format(basename))
+            print("警告： {} 変換しませんでした。".format(name))
+            print("　　　 リストファイルか何かに原因があります。")
+            file.write("{}, 処理に問題あり\n".format(basename))
     return None
 
 
 def main():
     names, path = names2list(sys.argv[1])
-    print("今度転換するファイルは以下のものです：")
+    print("今度処理するファイルは以下のものです：")
     for name in names:
         print("{},".format(name))
     for name in names:
@@ -54,8 +54,8 @@ def main():
             temp_sheet = []
             make_log(name, path, "none", temp_sheet)
     print("-" * 8)
-    print("リストファイルにおける全ての Excel ファイルは転換されました。")
-    print("転換の過程と結果は、{} にて確認できます。".format("result.log"))
+    print("リストファイルにおける全ての Excel ファイルを処理しました。")
+    print("処理の過程と結果は、 {} で確認できます。".format("result.log"))
     return None
 
 

@@ -197,17 +197,17 @@ def get_content_lists(sheet, index_row, index_length):
     return content_lists
 
 
-def make_uncover_text_file(path, sheet_name):
-    with open(path + "uncovered.txt", 'a+',
-              newline='', encoding='utf-8') as uncover_list:
-        uncover_list.write(sheet_name + "\n")
+def make_uncover_csv_file(path, sheet_name):
+    with open(path + "{}.csv".format(sheet_name), 'w',
+              newline='', encoding='cp932', errors='ignore') as uncover_list:
+        uncover_list.write(sheet_name)
     return None
 
 
 def print_warning(sheet_name):
     print("-" * 8)
-    print("警告： {} というシートは整形されませんでした。".format(sheet_name))
-    print("　　　 そちらのデータ構造か、転換プログラムの論理をチェックしてください。")
+    print("警告： ワークシート {} は整形しませんでした。".format(sheet_name))
+    print("　　　 データ構造か何かに原因があります。")
     return None
 
 
@@ -258,7 +258,7 @@ class Excel2csv(object):
         if file_name:
             self.book_name = os.path.abspath(file_name)
         else:
-            raise RuntimeError('No filename!')
+            raise RuntimeError('ファイル名はありません')
 
         self.file_name = os.path.basename(self.book_name)
         self.sheet_names = get_sheet_names_from_book(self.book_name)
@@ -291,7 +291,7 @@ class Excel2csv(object):
                 result[sheet_name] = [content_lists, titles]
             except:
                 print_warning(sheet_name)
-                make_uncover_text_file(csv_path, sheet_name)
+                make_uncover_csv_file(csv_path, sheet_name)
                 result[sheet_name] = None
                 uncover_sheets.append(sheet_name)
             else:
