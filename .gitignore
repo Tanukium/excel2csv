@@ -242,3 +242,4 @@ $RECYCLE.BIN/
 .idea/*
 sample/*
 msemi/media/*
+msemi/local_settings.py
