@@ -305,7 +305,7 @@ class Excel2csv(object):
             csv_name = sheet_name + ".csv"
             if csv_source[sheet_name]:
                 with open(csv_path + csv_name, 'w', newline='',
-                          encoding='cp932', errors='ignore') as csv_file:
+                          encoding='GBK', errors='ignore') as csv_file:
                     writer = csv.writer(csv_file, delimiter=',',
                                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
                     output = csv_source[sheet_name][1]

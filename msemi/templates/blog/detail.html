@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block main %}
+
+<main role="main" class="flex-shrink-0">
+    <div class="jumbotron">
+        <div class="container">
+            <h1 class="mt-5">{{ post.title }}</h1>
+            <p class="lead">
+                <time class="entry-date" datetime="{{ post.created_time }}">
+                    {{ post.created_time }}
+                </time>
+                by {{ post.author }}
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <p class="lead">{{ post.body|safe }}</p>
+    </div>
+
+    <div class="container">
+        <p class="lead"><a class="btn btn-secondary" href="/" role="button">戻る</a></p>
+    </div>
+
+    <hr>
+
+</main>
+
+{% endblock main %}

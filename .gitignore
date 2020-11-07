@@ -206,10 +206,6 @@ venv.bak/
 
 ### VisualStudioCode ###
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
 
 ### Windows ###
 # Windows thumbnail cache files
@@ -245,3 +241,4 @@ $RECYCLE.BIN/
 */*.xlsx
 .idea/*
 sample/*
+msemi/media/*

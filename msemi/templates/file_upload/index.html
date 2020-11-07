@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block main %}
+<main role="main" class="flex-shrink-0">
+    <div class="jumbotron">
+        <div class="container">
+            <h1 class="mt-5">{{ title }}</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <p class="lead">
+            <form action="" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="btn btn-info form-control " type="submit" value="submit">変換</button>
+            </form>
+        </p>
+    </div>
+    
+    <div class="container">
+        <p class="lead"><a class="btn btn-secondary" href="/" role="button">戻る</a></p>
+    </div>
+
+    <hr>
+</main>
+
+{% endblock main %}

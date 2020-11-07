@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block main %}
+<main role="main" class="flex-shrink-0">
+    <div class="jumbotron">
+        <div class="container">
+            <h1 class="mt-5">ファイルリスト</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <p class="lead">
+            {% if files %}
+        <table class="table table-striped">
+            <tbody>
+                <tr>
+                    <td>ファイル名・URL</td>
+                    <td>サイズ</td>
+                </tr>
+                {% for file in files %}
+                <tr>
+                    <td><a href="{{ file.file.url }}">{{ file.file.url }}</a></td>
+                    <td>{{ file.file.size | filesizeformat }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% else %}
+        まだ何もアップロードしていません。<br>
+        <a href="/upload/">こちら</a>をクリックして
+        変換したいExcelファイルをアップロードしてください。
+        {% endif %}
+        </p>
+    </div>
+    
+    <div class="container">
+        <p class="lead"><a class="btn btn-secondary" href="/" role="button">戻る</a></p>
+    </div>
+
+    <hr>
+</main>
+{% endblock %}
