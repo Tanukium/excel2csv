@@ -4,6 +4,7 @@ import re
 import os
 import csv
 import sys
+import shutil
 
 
 def remove_space_strings(row):
@@ -198,16 +199,17 @@ def get_content_lists(sheet, index_row, index_length):
 
 
 def make_uncover_csv_file(path, sheet_name):
-    with open(path + "{}.csv".format(sheet_name), 'w',
-              newline='', encoding='cp932', errors='ignore') as uncover_list:
+    with open(os.path.join(path, "{}.csv".format(sheet_name)), 'w',
+              newline='', encoding='GBK', errors='ignore') as uncover_list:
         uncover_list.write(sheet_name)
     return None
 
 
 def print_warning(sheet_name):
     print("-" * 8)
-    print("警告： ワークシート {} は整形しませんでした。".format(sheet_name))
-    print("　　　 データ構造か何かに原因があります。")
+    print("警告：")
+    print("ワークシート {} は整形しませんでした。".format(sheet_name))
+    print("データ構造を識別できない可能性が高いです。")
     return None
 
 
@@ -225,8 +227,13 @@ def get_merged_cells_value(sheet, row_index, col_index):
     return None
 
 
-def get_rows_from_sheet(book_name, sheet_name):
+def open_book(book_name):
     book = xlrd.open_workbook(book_name, formatting_info=True)
+    return book
+
+
+def get_rows_from_sheet(book_name, sheet_name):
+    book = open_book(book_name)
     sheet = book.sheet_by_name(sheet_name)
     rows_num = sheet.nrows
     cols_num = sheet.ncols
@@ -248,37 +255,38 @@ def get_rows_from_sheet(book_name, sheet_name):
 
 
 def get_sheet_names_from_book(book_name):
-    book = xlrd.open_workbook(book_name, formatting_info=True)
+    book = open_book(book_name)
     sheet_names = book.sheet_names()
     return sheet_names
+
+
+def get_csv_path_and_make_folder(abs_file_name):
+    path = os.path.dirname(abs_file_name)
+    file_name = os.path.basename(abs_file_name)
+    csv_path = os.path.join(path, os.path.splitext(file_name)[0])
+    if os.path.exists(csv_path):
+        pass
+    else:
+        os.mkdir(csv_path)
+    return csv_path
 
 
 class Excel2csv(object):
     def __init__(self, file_name):
         if file_name:
-            self.book_name = os.path.abspath(file_name)
+            self.abs_file_name = os.path.abspath(file_name)
+            self.file_name = os.path.basename(self.abs_file_name)
         else:
             raise RuntimeError('ファイル名はありません')
 
-        self.file_name = os.path.basename(self.book_name)
-        self.sheet_names = get_sheet_names_from_book(self.book_name)
-
-    def get_csv_path_and_make_folder(self):
-        folder_name = os.path.dirname(self.book_name) + os.sep
-        csv_path = (folder_name +
-                    os.path.splitext(self.file_name)[0] + os.sep)
-        if os.path.exists(csv_path):
-            pass
-        else:
-            os.mkdir(csv_path)
-        return csv_path
+        self.sheet_names = get_sheet_names_from_book(self.abs_file_name)
 
     def get_content_lists_and_titles_from_book(self):
-        csv_path = self.get_csv_path_and_make_folder()
+        csv_path = get_csv_path_and_make_folder(self.abs_file_name)
         result = {}
         uncover_sheets = []
         for sheet_name in self.sheet_names:
-            sheet = get_rows_from_sheet(self.book_name, sheet_name)
+            sheet = get_rows_from_sheet(self.abs_file_name, sheet_name)
             try:
                 sheet = data_pretreatment(sheet)
                 titles = get_title_and_comment(sheet)
@@ -287,7 +295,8 @@ class Excel2csv(object):
                 index_area = get_index_lists(sheet, index_length)
                 index_row = get_index_row_contained_strings(index_area)
                 index_row = reformat_index_row(index_row)
-                content_lists = get_content_lists(sheet, index_row, index_length)
+                content_lists = get_content_lists(
+                    sheet, index_row, index_length)
                 result[sheet_name] = [content_lists, titles]
             except:
                 print_warning(sheet_name)
@@ -299,12 +308,12 @@ class Excel2csv(object):
         return result, uncover_sheets
 
     def output_csv_files(self):
-        csv_path = self.get_csv_path_and_make_folder()
+        csv_path = get_csv_path_and_make_folder(self.abs_file_name)
         csv_source, uncover_sheets = self.get_content_lists_and_titles_from_book()
         for sheet_name in self.sheet_names:
             csv_name = sheet_name + ".csv"
             if csv_source[sheet_name]:
-                with open(csv_path + csv_name, 'w', newline='',
+                with open(os.path.join(csv_path, csv_name), 'w', newline='',
                           encoding='GBK', errors='ignore') as csv_file:
                     writer = csv.writer(csv_file, delimiter=',',
                                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
@@ -319,14 +328,26 @@ class Excel2csv(object):
                         writer.writerow(row)
             else:
                 pass
-        return uncover_sheets
+        return uncover_sheets, csv_path
+
+    def pack_csv_files(self):
+        zip_name = self.file_name
+        zip_name = os.path.splitext(zip_name)[0]
+        path = os.path.dirname(self.abs_file_name)
+        path = os.path.join(path, zip_name)
+        test = shutil.make_archive(path, format='zip',
+                            root_dir=path, base_dir='.')
+        shutil.rmtree(path)
+        return test
 
 
 def main():
     e2c = Excel2csv(sys.argv[1])
     # con = e2c.get_content_lists_and_titles_from_book()
     # print(con)
-    uncover_sheet = e2c.output_csv_files()
+    
+    e2c.output_csv_files()
+    # e2c.pack_csv_files()
     return None
 
 

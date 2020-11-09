@@ -6,7 +6,7 @@ from .models import File
 class FileUploadModelForm(forms.ModelForm):
     class Meta:
         model = File
-        fields = ('file',)
+        fields = ['file']
 
         widgets = {
             'file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
@@ -15,8 +15,7 @@ class FileUploadModelForm(forms.ModelForm):
     def clean_file(self):
         file = self.cleaned_data['file']
         ext = file.name.split('.')[-1].lower()
-        if ext not in ["jpg", "pdf", "xls"]:
-            raise forms.ValidationError(
-                "Only jpg, pdf and xls files are allowed.")
+        if ext != "xls":
+            raise forms.ValidationError("Only xls files are allowed.")
         # return cleaned data is very important.
         return file
