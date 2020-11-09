@@ -1,36 +1,37 @@
 {% extends 'base.html' %}
 
 {% block main %}
-  <main role='main'>
+<main role='main'>
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="jumbotron">
-      <div class="container">
-        <h1 class="display-3">{{ title }}</h1>
-        <p>長野大学企業情報学部2018年度前川ゼミの「信州デジタルコモンズプロジェクト／オープンデータプロジェクト」は、<br>
-          「地域の諸データのオープンデータ化」という課題を解決するを目指しています。<br>
-          Excelの統計データを直接、データベース化するには難しいですが、CSVに変換したらそれほど難しくはありません。<br>
-          このツールでExcelをCSVファイルに自動変換することで、少しでもオープンデータ化においての「はじめてのハードル」を取り除きたいと思います。<br>
-          精度・アルゴリズム等の問題点が未だ残っていますが、是非一度お試しください。
-        </p>
-        <p><a class="btn btn-primary btn-lg" href="/upload/" role="button">変換してみる</a></p>
-      </div>
+        <div class="container">
+            <h1 class="display-3">{{ title }}</h1>
+            <p>前川ゼミが参与している「信州デジタルコモンズプロジェクト／オープンデータプロジェクト」は、<br>
+                「地域の諸データのオープンデータ化」という課題の解決を目指しています。<br>
+                Excelの統計データを直接、データベース化するには難しいですが、CSVに変換したらそれほど難しくはありません。<br>
+                このアプリを使ってExcelをCSVファイルに自動変換することで、<br>
+                少しでもオープンデータ化においての「はじめてのハードル」を取り除きたいと思います。<br>
+                精度・アルゴリズム等の問題点が未だ残っていますが、是非一度お試しください。
+            </p>
+            <p><a class="btn btn-primary btn-lg" href="/upload/" role="button">変換してみる</a></p>
+        </div>
     </div>
 
     <div class="container">
-          <div class="row">
+        <div class="row">
             {% for p in post %}
             <div class="col-md-4">
-              <h2>{{ p.title }}</h2>
-              <p>{{ p.excerpt }}</p>
-              <p><a class="btn btn-secondary" href={{ p.get_absolute_url }} role="button">詳細</a></p>
+                <h2>{{ p.title }}</h2>
+                <p>{{ p.excerpt }}</p>
+                <p><a class="btn btn-secondary" href={{ p.get_absolute_url }} role="button">詳細</a></p>
             </div>
             {% endfor %}
-          </div>
+        </div>
 
-      <hr>
+        <hr>
 
     </div> <!-- /container -->
 
-  </main>
+</main>
 
 {% endblock main %}
