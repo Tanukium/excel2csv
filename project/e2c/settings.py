@@ -28,8 +28,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['18.179.225.250',
-                 'e2c.ninja']
+ALLOWED_HOSTS = [
+    '18.179.225.250',
+    'e2c.ninja',
+    # '127.0.0.1',
+]
 
 # Application definition
 
@@ -42,7 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'blog.apps.BlogConfig',
     'file_upload.apps.FileUploadConfig',
-    'gunicorn'
+    'gunicorn',
 ]
 
 MIDDLEWARE = [
@@ -120,9 +123,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
