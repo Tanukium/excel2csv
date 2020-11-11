@@ -271,7 +271,7 @@ def get_csv_path_and_make_folder(abs_file_name):
     return csv_path
 
 
-class Excel2csv(object):
+class Converter(object):
     def __init__(self, file_name):
         if file_name:
             self.abs_file_name = os.path.abspath(file_name)
@@ -336,16 +336,16 @@ class Excel2csv(object):
         path = os.path.dirname(self.abs_file_name)
         path = os.path.join(path, zip_name)
         test = shutil.make_archive(path, format='zip',
-                            root_dir=path, base_dir='.')
+                                   root_dir=path, base_dir='.')
         shutil.rmtree(path)
         return test
 
 
 def main():
-    e2c = Excel2csv(sys.argv[1])
+    e2c = Converter(sys.argv[1])
     # con = e2c.get_content_lists_and_titles_from_book()
     # print(con)
-    
+
     e2c.output_csv_files()
     # e2c.pack_csv_files()
     return None

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .forms import FileUploadModelForm
 from .models import File
 from django.template.defaultfilters import filesizeformat
-from excel2csv import excel2csv
+from converter import excel2csv
 import os
 
 
@@ -15,7 +15,7 @@ def model_form_upload(request):
                                    request.FILES)
         if form.is_valid():
             f = form.save()
-            e2c = excel2csv.Excel2csv(f.abspath_file())
+            e2c = excel2csv.Converter(f.abspath_file())
             e2c.output_csv_files()
             e2c.pack_csv_files()
             return redirect("/upload/list/")
@@ -32,4 +32,4 @@ def file_list(request):
         result = os.path.splitext(file.file.url)[0] + '.zip'
         results.append(result)
     lst = zip(files, results)
-    return render(request, 'file_upload/list.html', {'files':files, 'lst': lst})
+    return render(request, 'file_upload/list.html', {'files': files, 'lst': lst})

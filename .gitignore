@@ -241,5 +241,5 @@ $RECYCLE.BIN/
 *.xlsx
 .idea/*
 sample/*
-msemi/media/*
-msemi/local_settings.py
+project/media/*
+project/local_settings.py

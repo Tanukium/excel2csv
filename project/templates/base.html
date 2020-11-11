@@ -1,0 +1,68 @@
+{% load static %}
+<!doctype html>
+<html lang="ja"">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <title>{{ title }}</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'blog/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <style>
+    /* Move down content because we have a fixed navbar that is 3.5rem tall */
+    body {
+      padding-top: 3.5rem;
+    }
+
+    .bd-placeholder-img {
+      font-size: 1.125rem;
+      text-anchor: middle;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    @media (min-width: 768px) {
+      .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+      }
+    }
+
+    </style>
+</head>
+
+<body>
+<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+                <a class="nav-link" href="/">ホーム<span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/upload/list">ファイルリスト</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/admin">サイト管理</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+{% block main %}
+{% endblock main %}
+
+<footer class="container">
+    <p>&copy; シュク 2018-2020</p>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+<script src="{% static 'blog/js/bootstrap.bundle.min.js' %}"></script>
+
+</html>

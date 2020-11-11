@@ -1,4 +1,4 @@
-from excel2csv import Excel2csv
+from . import excel2csv
 import os
 import sys
 
@@ -44,7 +44,7 @@ def main():
         print("{},".format(name))
     for name in names:
         try:
-            e2c = Excel2csv(name)
+            e2c = excel2csv.Converter(name)
             uncovered_sheet = e2c.output_csv_files()
             if uncovered_sheet:
                 make_log(name, path, "some", uncovered_sheet)
