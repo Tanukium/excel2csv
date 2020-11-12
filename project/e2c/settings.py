@@ -29,7 +29,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    '18.179.225.250',
     'e2c.ninja',
     # '127.0.0.1',
 ]
