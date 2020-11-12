@@ -20,6 +20,9 @@ backlog = 512
 # 超时
 timeout = 30
 
+keyfile = '/etc/letsencrypt/live/e2c.ninja/privkey.pem'
+certfile = '/etc/letsencrypt/live/e2c.ninja/fullchain.pem'
+
 # 调试状态
 debug = False
 
