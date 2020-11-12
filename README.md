@@ -11,8 +11,7 @@ Excelの統計データを直接、データベース化するには難しいで
 
 
 # URL
-AWSにデプロイ後追加予定
-
+[https://e2c.ninja](https://e2c.ninja)
 
 # 使用技術
 - Python 3.7
@@ -23,6 +22,7 @@ AWSにデプロイ後追加予定
 - Markdown
 - Nginx
 - Gunicorn
+- Let's Encrypt
 - AWS
   - VPC(Lightsail)
   - Route 53
@@ -35,15 +35,17 @@ AWSにデプロイ後追加予定
   - アップロード/出力ファイルリスト表示機能(SQLite)
 - 記事表示機能(Django, Markdown)
 - データベースWeb管理機能(django.contrib.admin)
-
+- SSL(Let's Encrypt)
 
 
 # ToDo
 - 短期
-  - AWSにデプロイ
+  - ~~AWSにデプロイ~~
+  - ~~HTTPS(SSL)化~~
   - ファイルリストにファイル削除機能(ボタン)追加
 - 中期
   - テストを書く
+  - MariaDB等のDBに切替る
   - Dockerで環境構築
 - 長期
   - 変換精度向上(変換論理の修正/再構築)
