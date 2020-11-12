@@ -200,7 +200,7 @@ def get_content_lists(sheet, index_row, index_length):
 
 def make_uncover_csv_file(path, sheet_name):
     with open(os.path.join(path, "{}.csv".format(sheet_name)), 'w',
-              newline='', encoding='GBK', errors='ignore') as uncover_list:
+              newline='', encoding='cp932', errors='ignore') as uncover_list:
         uncover_list.write(sheet_name)
     return None
 
@@ -314,7 +314,7 @@ class Converter(object):
             csv_name = sheet_name + ".csv"
             if csv_source[sheet_name]:
                 with open(os.path.join(csv_path, csv_name), 'w', newline='',
-                          encoding='GBK', errors='ignore') as csv_file:
+                          encoding='cp932', errors='ignore') as csv_file:
                     writer = csv.writer(csv_file, delimiter=',',
                                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
                     output = csv_source[sheet_name][1]
