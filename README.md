@@ -1,5 +1,5 @@
 # Excel->CSV直行便
-#### alias 'def excel2csv (file: excel) -> (file:csv)'
+#### alias 'def excel2csv (file: excel) -> (file: csv)'
 ExcelファイルをCSVファイルに自動変換するWebアプリです。<br>
 2018年度前川ゼミプロジェクトです。
 
@@ -28,11 +28,17 @@ Excelの統計データを直接、データベース化するには難しいで
   - Route 53
 
 
+# AWS構成図
+![infra](https://e2c.ninja/static/infra.svg)
+
+
 # 機能一覧
 - Excel->CSV変換機能(Xlrd)
 - Excelファイルアップロード機能(django.forms.ModelForm)
-  - 出力したCSVファイルダウンロード機能
-  - アップロード/出力ファイルリスト表示機能(SQLite)
+  - 変換出力したCSVファイルアーカイブ機能(shutil.make_archive)
+  - アーカイブしたZIPファイルダウンロード機能
+  - アップロード/変換出力ファイルリスト表示機能(SQLite)
+  - アップロード/変換出力ファイル削除機能
 - 記事表示機能(Django, Markdown)
 - データベースWeb管理機能(django.contrib.admin)
 - SSL(Let's Encrypt)
@@ -43,9 +49,9 @@ Excelの統計データを直接、データベース化するには難しいで
   - ~~AWSにデプロイ~~
   - ~~HTTPS(SSL)化~~
   - ~~CSSスマホ対応~~
-  - ファイルリストにファイル削除機能(ボタン)追加
-- 中期
+  - ~~ファイル削除機能(ボタン)追加~~
   - テストを書く
+- 中期
   - MariaDB等のDBに切替る
   - Dockerで環境構築
 - 長期

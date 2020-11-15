@@ -4,6 +4,7 @@ from . import views
 # namespace
 app_name = "file_upload"
 urlpatterns = [
+    path('del/<int:id>', views.delete_file, name='delete'),
     # View File List
     path('list/', views.file_list, name='file_list'),
     # Upload Files Using Model Form

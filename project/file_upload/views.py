@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 from .forms import FileUploadModelForm
 from .models import File
-from django.template.defaultfilters import filesizeformat
 from converter import excel2csv
 import os
 
@@ -21,15 +20,37 @@ def model_form_upload(request):
             return redirect("/upload/list/")
     else:
         form = FileUploadModelForm()
-    return render(request, 'file_upload/index.html', {'form': form, 'title': 'Excelファイルをアップロード'})
+    return render(request, 'file_upload/index.html',
+                  {'form': form, 'title': 'Excelファイルをアップロード'})
 
 
 # Show file list
 def file_list(request):
     files = File.objects.all().order_by("-id")
-    results = []
+    results, result_sizes, result_paths = [], [], []
     for file in files:
         result = os.path.splitext(file.file.url)[0] + '.zip'
         results.append(result)
-    lst = zip(files, results)
-    return render(request, 'file_upload/list.html', {'files': files, 'lst': lst})
+        path = file.abspath_file()
+        result_paths.append(path)
+    for path in result_paths:
+        path = os.path.splitext(path)[0] + '.zip'
+        size = os.path.getsize(path)
+        result_sizes.append(size)
+    lst = zip(files, results, result_sizes)
+    return render(request, 'file_upload/list.html',
+                  {
+                      'files': files,
+                      'lst': lst,
+                      'title': 'ファイルリスト'
+                  })
+
+
+def delete_file(request, id):
+    file_id = id
+    delete_files = File.objects.filter(id=file_id)
+    for file in delete_files:
+        os.remove(file.abspath_file())
+        os.remove(os.path.splitext(file.abspath_file())[0] + '.zip')
+    File.objects.filter(id=file_id).delete()
+    return file_list(request)

@@ -16,6 +16,6 @@ class FileUploadModelForm(forms.ModelForm):
         file = self.cleaned_data['file']
         ext = file.name.split('.')[-1].lower()
         if ext != "xls":
-            raise forms.ValidationError("Only xls files are allowed.")
+            raise forms.ValidationError(".xls以外の拡張子ファイルはアップロードいただけません。")
         # return cleaned data is very important.
         return file
