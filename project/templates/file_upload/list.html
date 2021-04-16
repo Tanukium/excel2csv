@@ -18,7 +18,9 @@
                 <td>元ファイル</td>
                 <td>出力ファイルサイズ</td>
                 <td>元ファイルサイズ</td>
+                {% if perms.file_upload.delete_File %}
                 <td>削除</td>
+                {% endif %}
             </tr>
             {% for file, result, result_size in lst %}
             <tr>
@@ -26,8 +28,10 @@
                 <td><a href="{{ file.file.url }}">{{ file.file.url }}</a></td>
                 <td>{{ result_size | filesizeformat }}</td>
                 <td>{{ file.file.size | filesizeformat }}</td>
+                {% if perms.file_upload.delete_File %}
                 <td><a class="btn btn-outline-danger btn-sm" href="{% url 'file_upload:delete' file.id %}" role="button">削除</a>
                 </td>
+                {% endif %}
             </tr>
             {% endfor %}
             </tbody>
