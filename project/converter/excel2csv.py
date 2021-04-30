@@ -220,8 +220,8 @@ def get_merged_cells(sheet):
 def get_merged_cells_value(sheet, row_index, col_index):
     merged = get_merged_cells(sheet)
     for (rlow, rhigh, clow, chigh) in merged:
-        if row_index >= rlow and row_index < rhigh:
-            if col_index >= clow and col_index < chigh:
+        if rlow <= row_index < rhigh:
+            if clow <= col_index < chigh:
                 cell_value = sheet.cell_value(rlow, clow)
                 return cell_value
     return None
