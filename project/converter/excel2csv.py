@@ -119,11 +119,23 @@ def remove_blank_cells(row):
 
 def get_no_blank_cell_sheet(sheet):
     """
-    sheetの全ての空っぽcell(str: '')を削除してから, new_sheetとして返す.
+    sheetの全てのrow(list)要素に対して, 以下の走査を行う.
+    1. もし中の全てのcell(str)要素が空っぽ文字列(str: -> '')であれば, 全ての空っぽ文字列を削除してから,
+    要素なしになったrowをnew_sheet(list)に入れる;
+    2. もし''でないcell要素があれば, そのrowをそのままnew_sheetに入れる.
+    走査完了後, new_sheetを返す.
     """
     new_sheet = []
     for row in sheet:
-        new_sheet.append(remove_blank_cells(row))
+        is_blank = True
+        for cell in row:
+            if cell != "":
+                is_blank = False
+                break
+        if is_blank:
+            new_sheet.append(remove_blank_cells(row))
+        else:
+            new_sheet.append(row)
     return new_sheet
 
 
