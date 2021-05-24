@@ -26,6 +26,16 @@ def get_sheet_names_from_book(book_name):
     return sheet_names
 
 
+def get_row_col_num_from_sheet(sheet_name):
+    """
+    sheet_name(str: -> xlrd.sheet.Sheet)という名のシートに対し,
+    それの行数, 列数を返す.
+    """
+    row_num = sheet_name.nrows
+    col_num = sheet_name.ncols
+    return row_num, col_num
+
+
 "以下は, sheetの結合セルを除去するための下処理メソッド."
 
 
@@ -57,8 +67,7 @@ def get_unmerged_sheet(book_name, sheet_name):
     """
     book = open_book(book_name)
     sheet = book.sheet_by_name(sheet_name)
-    rows_num = sheet.nrows
-    cols_num = sheet.ncols
+    rows_num, cols_num = get_row_col_num_from_sheet(sheet)
     new_sheet = []
     if rows_num > 1 and cols_num > 1:
         for r in range(rows_num):
@@ -93,14 +102,28 @@ def replace_space_strings(row):
     return new_row
 
 
+def replace_line_break(row):
+    """
+    row(list)の要素の中に存在する, 全ての*\n*を削除してからnew_row(list)として返す.
+    """
+    new_row = []
+    for string in row:
+        if type(string) == str and '\n' in string:
+            new_row.append(string.replace('\n', ''))
+        else:
+            new_row.append(string)
+    return new_row
+
+
 def get_no_space_cell_sheet(sheet):
     """
     sheet(list: -> list)の中, *スペース*と*'\u3000'*に充填されたセルを,
     *''*に入れ替えてからnew_sheetを返す.
+    また, セルに*\n*があれば, それを削除する.
     """
     new_sheet = []
     for row in sheet:
-        new_sheet.append(replace_space_strings(row))
+        new_sheet.append(replace_line_break(replace_space_strings(row)))
     return new_sheet
 
 
@@ -152,16 +175,66 @@ def get_no_blank_row_sheet(sheet):
     return new_sheet
 
 
+def transpose_sheet(sheet):
+    """
+    x行y列のsheetを, y行x列のsheetに変換してtransposed_sheetとして返す.
+    """
+    row_num, col_num = len(sheet), len(sheet[0])
+    transposed_sheet = []
+    for i in range(col_num):
+        temp = []
+        for row in sheet:
+            temp.append(row[i])
+        transposed_sheet.append(temp)
+    return transposed_sheet
+
+
+def count_blank_cell_at_row_start(transposed_sheet):
+    """
+    transposed_sheet(list: -> list -> str)の要素(list)に対し,
+    連続何行が中の要素が全て*''*になる(つまり, 列がからっぽ)ことを計算し, その結果をintとして返す.
+    結果がtransposed_sheetの長さ(つまり, sheetの列数)と一致すれば,
+    sheetがからっぽに判定し, -1を返す.
+    """
+    count = 0
+    for col in transposed_sheet:
+        if any(col):
+            break
+        count += 1
+    if count == len(transposed_sheet):
+        return -1
+    else:
+        return count
+
+
+def remove_blank_cell_at_row_start(sheet):
+    """
+    sheetのrowの始まりに存在する空っぽセル('')を削除して,
+    new_sheetとして返す.
+    """
+    new_sheet = []
+    transposed_sheet = transpose_sheet(sheet)
+    count = count_blank_cell_at_row_start(transposed_sheet)
+    if count != -1:
+        for row in sheet:
+            new_sheet.append(row[count:])
+    else:
+        for row in sheet:
+            new_sheet.append(row)
+    return new_sheet
+
+
 def sheet_pretreatment(book_name, sheet_name):
     """
     sheet_name(str: sheet(xlrd.sheet.Sheet)の名前)に対し, その名前のsheetを
-    結合セル解除 -> スペース入替 -> 空っぽセル削除 -> 空っぽ行削除をしてから, sheetを返す.
-    上のメソッドを順番通り呼び出すだけ.
+    結合セル解除 -> スペース入替 -> 空っぽセル削除 -> 空っぽ行削除 -> 行の始まりの空っぽセル削除をしてから,
+    sheetを返す. つまり, 上のメソッドを順番通り呼び出すだけ.
     """
     sheet = get_unmerged_sheet(book_name, sheet_name)
     sheet = get_no_space_cell_sheet(sheet)
     sheet = get_no_blank_cell_sheet(sheet)
     sheet = get_no_blank_row_sheet(sheet)
+    sheet = remove_blank_cell_at_row_start(sheet)
     return sheet
 
 
@@ -197,7 +270,9 @@ def output_unconverted_csv_file(path, sheet_name):
     """
     with open(os.path.join(path, "{}.csv".format(sheet_name)), 'w',
               newline='', encoding='cp932', errors='ignore') as unconverted_csv_file:
-        unconverted_csv_file.write(sheet_name)
+        unconverted_csv_file.write(("シート {} はCSVに変換できませんでした。".format(sheet_name)))
+        unconverted_csv_file.write("シートの中に写真・グラフが入ったり、"
+                                   "シートに入っている有効データが少なかったりするかもしれません。")
     return None
 
 
@@ -209,7 +284,8 @@ def print_unconverted_warning(sheet_name):
     print("-" * 8)
     print("警告：")
     print("シート {} はCSVに変換できませんでした。".format(sheet_name))
-    print("シートの中に写真・グラフが入ったかもしれません。")
+    print("シートの中に写真・グラフが入ったり、"
+          "シートに入ってる有効データが少なかったりするかもしれません。")
     return None
 
 
