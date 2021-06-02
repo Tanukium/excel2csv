@@ -9,6 +9,7 @@ django = ">=3.1.8"
 markdown = "*"
 xlrd = "*"
 gunicorn = "*"
+urllib3 = ">=1.26.5"
 
 [dev-packages]
 
