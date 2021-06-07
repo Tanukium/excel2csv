@@ -29,7 +29,7 @@ Excelの統計データを直接、データベース化するには難しいで
 
 
 # AWS構成図
-![infra](https://e2c.ninja/static/infra.png)
+![infra](https://github.com/Tanukium/excel2csv/blob/master/project/static/infra.png?raw=true)
 
 
 # 機能一覧
