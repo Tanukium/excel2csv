@@ -18,7 +18,7 @@
     </div>
 
     <div class="container">
-        <div class="row">
+        <div class="row mx-auto">
             {% for p in post %}
             <div class="col-md-4">
                 <h2>{{ p.title }}</h2>
@@ -27,11 +27,48 @@
             </div>
             {% endfor %}
         </div>
+    </div>
 
+    <div class="container py-1">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                <!-- 前へ の部分 -->
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- 数字の部分 -->
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <a class="page-link" href="#!">{{ num }}</a>
+                </li>
+                    {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- 次へ の部分 -->
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <div class="container">
         <hr>
-
-    </div> <!-- /container -->
-
+    </div>
 </main>
 
 {% endblock main %}
