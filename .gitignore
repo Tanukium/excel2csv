@@ -391,3 +391,4 @@ $RECYCLE.BIN/
 project/media/*
 project/static/*
 project/gunicorn_log/*
+/project/e2c/settings.py.backup
