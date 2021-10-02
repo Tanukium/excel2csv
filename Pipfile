@@ -10,6 +10,7 @@ markdown = "*"
 xlrd = "*"
 gunicorn = "*"
 urllib3 = ">=1.26.5"
+django-recaptcha = "*"
 
 [dev-packages]
 

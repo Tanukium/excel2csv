@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'blog.apps.BlogConfig',
     'file_upload.apps.FileUploadConfig',
     'gunicorn',
+    'captcha'
 ]
 
 MIDDLEWARE = [
@@ -107,12 +108,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
 LANGUAGE_CODE = 'ja-jp'
 
-TIME_ZONE = 'Etc/UTC'
+TIME_ZONE = 'Asia/Tokyo'
 
 USE_I18N = True
 
