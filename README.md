@@ -14,22 +14,25 @@ Excelの統計データを直接、データベース化するには難しいで
 [https://e2c.ninja](https://e2c.ninja)
 
 # 使用技術
-- Python 3.7
+- Python 3
   - xlrd(Third-party py library)
-- Django 3.1
+- Django >= 3.2.4
 - SQLite
 - Bootstrap
 - Markdown
+- ReCaptcha V3
 - Nginx
 - Gunicorn
 - Let's Encrypt
 - AWS
-  - VPC(Lightsail)
+  - ~~VPC(Lightsail)~~
+  - EC2 + EBS
+  - CloudWatch + Amazon SNS
   - Route 53
 
 
 # AWS構成図
-![infra](https://github.com/Tanukium/excel2csv/blob/master/project/static/infra.png?raw=true)
+![infra](https://github-ettnzncwtvxtk1wd.s3.ap-northeast-1.amazonaws.com/201115.drawio.png)
 
 
 # 機能一覧
@@ -40,6 +43,8 @@ Excelの統計データを直接、データベース化するには難しいで
   - アップロード/変換出力ファイルリスト表示機能(SQLite)
   - アップロード/変換出力ファイル削除機能
 - 記事表示機能(Django, Markdown)
+- 記事ページング機能(Django, Bootstrap)
+- 不審(Botによる)アップロード防止機能(django-recaptcha, ReCaptcha V3)
 - データベースWeb管理機能(django.contrib.admin)
 - SSL(Let's Encrypt)
 
@@ -48,7 +53,7 @@ Excelの統計データを直接、データベース化するには難しいで
 - 短期
   - [x] AWSにデプロイ
   - [x] HTTPS(SSL)化
-  - [x] スマホ表示対応(CSS+Bootstrap)
+  - [x] スマホ表示対応(CSS + Bootstrap)
   - [x] ファイル削除機能(ボタン)追加
     - [x] 権限で削除ボタンの表示をコントロールする
   - [x] 変換論理の書き直し(Keep it simple, stupid.)
@@ -57,7 +62,10 @@ Excelの統計データを直接、データベース化するには難しいで
     - [x] コードのメンテナンスしやすさ(可読性)向上
   - [ ] テストを書く
 - 中期
-  - [ ] Dockerコンテンツ化する
+  - [x] EC2に移行
+  - [ ] S3に静的ファイルを保存
+  - [ ] Django側の投げ出した異常をお知らせ(CloudWatch + Amazon SNS)
+  - [ ] Dockerコンテナ/Lambda化
 - 長期
   - [ ] 変換精度向上(より高級な変換論理を掘り出す)
     - > 結合セルの解除, 空っぽセルの削除以外もっといい方法があるか？
