@@ -11,6 +11,8 @@ xlrd = "*"
 gunicorn = "*"
 urllib3 = ">=1.26.5"
 django-recaptcha = "*"
+django-storages = "*"
+boto3 = "*"
 
 [dev-packages]
 
