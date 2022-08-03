@@ -91,14 +91,6 @@ WSGI_APPLICATION = 'e2c.wsgi.application'
 #     }
 # }
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django_s3_sqlite",
-        "NAME": "db.sqlite3",
-        "BUCKET": "e2c-ninja-stg"
-    }
-}
-
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
