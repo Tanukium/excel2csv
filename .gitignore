@@ -389,6 +389,6 @@ $RECYCLE.BIN/
 *.zip
 
 project/media/*
-project/static/*
+project/*/static/*
 project/gunicorn_log/*
 /project/e2c/settings.py.*
