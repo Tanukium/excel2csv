@@ -15,8 +15,10 @@ Excelの統計データを直接、データベース化するには難しいで
 
 - AWS
   - ~~Lightsail~~
-  - EC2関連
+  - EC2(EBS, SG, ACL, EIP)
+  - IAM Policy/Role
   - CloudWatch Logs -> Lambda -> SNS
+  - S3
   - Route 53(domain, DNS)
 - Python 3
   - xlrd
@@ -60,15 +62,16 @@ Excelの統計データを直接、データベース化するには難しいで
     - 変換によってデータ構造を破壊してしまうリスクのある論理を削除
       - > データ部とインデックス部の判断, etc.
     - コードの可読性向上
-  - EC2に移行
+  - EC2にマイグレーション
   - 不審アップロード防止(ReCaptcha)
-  - 投稿ページング
+  - 投稿ページング機能
   - Nginx異常監視(CloudWatch Logs + Lambda + SNS)
-- Doing
-  - S3でのアップロードファイル保存
-  - S3でのSQLiteDBファイル運用
+  - S3でのDB運用(SQLite)
 - Todo
-  - 定期的EBSスナップショット取得
-  - Dockerコンテナ化
+  - 定期的EBSスナップショット取得設計
+  - サーバ設定のユーザデータ化
+    - ↑が実施済の場合、Auto-scaling/LBの導入
+    - Dockerコンテナ化も検討
+  - S3での`/media/`ファイル保存
   - 変換精度向上(より高級な変換論理を掘り出す)
     - > 結合セルの解除, 空っぽセルの削除以外もっといい方法があるか？
