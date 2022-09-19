@@ -24,12 +24,13 @@ Excelの統計データを直接、データベース化するには難しいで
   - xlrd
   - Django
   - Gunicorn
+  - boto3
 - Nginx
 - Let's Encrypt
 - SQLite
 - Bootstrap
 - Markdown
-- ReCaptcha V3
+- Google ReCaptcha V3
 
 # 構成図
 
@@ -37,10 +38,10 @@ Excelの統計データを直接、データベース化するには難しいで
 
 # Features
 
-- Excel->CSV変換機能(xlrd)
+- Excel->CSV変換機能(xlrd,boto3)
 - Excelファイルアップロード機能(django.forms.ModelForm)
-  - 変換出力したCSVファイルアーカイブ機能(shutil.make_archive)
-  - アーカイブしたZIPファイルダウンロード機能
+  - 変換出力したCSVファイルアーカイブ機能(io.StringsIO, zipfile, boto3)
+  - アーカイブしたZIPファイルダウンロード機能(boto3)
   - アップロード/変換出力ファイルリスト表示機能(SQLite)
   - アップロード/変換出力ファイル削除機能
 - 記事表示機能(Django, Markdown)
