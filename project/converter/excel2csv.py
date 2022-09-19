@@ -1,27 +1,25 @@
+import zipfile
 import xlrd
-import os
 import csv
-import shutil
-import sys
-
+import io
 
 "以下は, book(xlrd.book.Book)及びsheet(xlrd.sheet.Sheet)をロードするためのメソッド."
 
 
-def open_book(book_name):
+def open_book(xls_file_obj):
     """
-    book_name(str: ファイル名 -> XLSファイル)をxlrd.book.Bookとして開く.
+    xls_name(bytes: XLSファイル)をxlrd.book.Bookとして開く.
     """
-    book = xlrd.open_workbook(book_name, formatting_info=True)
+    book = xlrd.open_workbook(file_contents=xls_file_obj, formatting_info=True)
     return book
 
 
-def get_sheet_names_from_book(book_name):
+def get_sheet_names_from_book(xls_file_obj):
     """
     book(xlrd.book.Book)の中の全ての,
     sheet(xlrd.book.Book)の名前(str)の集合をsheet_names(list)として返す.
     """
-    book = open_book(book_name)
+    book = open_book(xls_file_obj)
     sheet_names = book.sheet_names()
     return sheet_names
 
@@ -60,12 +58,12 @@ def get_merged_cells_value(sheet, row_index, col_index):
     return None
 
 
-def get_unmerged_sheet(book_name, sheet_name):
+def get_unmerged_sheet(xls_file_obj, sheet_name):
     """
     bookの特定sheetに対し, 全てのセルの結合を解除した上、
     結合が解除された空白セルに元の結合セルの値を充填してから, new_sheet(list: -> list)として返す.
     """
-    book = open_book(book_name)
+    book = open_book(xls_file_obj)
     sheet = book.sheet_by_name(sheet_name)
     rows_num, cols_num = get_row_col_num_from_sheet(sheet)
     new_sheet = []
@@ -224,13 +222,13 @@ def remove_blank_cell_at_row_start(sheet):
     return new_sheet
 
 
-def sheet_pretreatment(book_name, sheet_name):
+def sheet_pretreatment(xls_file_obj, sheet_name):
     """
     sheet_name(str: sheet(xlrd.sheet.Sheet)の名前)に対し, その名前のsheetを
     結合セル解除 -> スペース入替 -> 空っぽセル削除 -> 空っぽ行削除 -> 行の始まりの空っぽセル削除をしてから,
     sheetを返す. つまり, 上のメソッドを順番通り呼び出すだけ.
     """
-    sheet = get_unmerged_sheet(book_name, sheet_name)
+    sheet = get_unmerged_sheet(xls_file_obj, sheet_name)
     sheet = get_no_space_cell_sheet(sheet)
     sheet = get_no_blank_cell_sheet(sheet)
     sheet = get_no_blank_row_sheet(sheet)
@@ -238,23 +236,26 @@ def sheet_pretreatment(book_name, sheet_name):
     return sheet
 
 
-"以下は, 変換後出力したCSVファイルを入れるフォルダを作成するための下処理メソッド."
+"""
+以下は, 整形済みのsheetをcsvフォーマットのオンメモリfile-like objectとして
+出力するメソッド.
+"""
 
 
-def get_csv_path_and_make_csv_folder(abs_file_name):
+def output_converted_csv_file_on_memory(csv_source, sheet_name):
     """
-    abs_file_name(str: 絶対パスを含めるXLSファイル名)に対し,
-    XLSファイルの所在フォルダに, 拡張子が含まないXLSファイル名でフォルダを作成し,
-    そのパスをcsv_path(str)として返す.
+    csv_source(dict: k->sheet_name, v->sheet)の中に入っている整形済みの特定sheetを、
+    csvフォーマットのオンメモリfile-like objectに変換して値で返すメソッド.
     """
-    path = os.path.dirname(abs_file_name)
-    file_name = os.path.basename(abs_file_name)
-    csv_path = os.path.join(path, os.path.splitext(file_name)[0])
-    if os.path.exists(csv_path):
-        pass
-    else:
-        os.mkdir(csv_path)
-    return csv_path
+    csv_on_memory = io.StringIO()
+    writer = csv.writer(csv_on_memory, delimiter=',',
+                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    for row in csv_source[sheet_name]:
+        writer.writerow(row)
+    csv_data = csv_on_memory.getvalue()
+    csv_on_memory.close()
+    csv_data = csv_data.encode('utf-8')
+    return csv_data
 
 
 """
@@ -263,17 +264,19 @@ def get_csv_path_and_make_csv_folder(abs_file_name):
 """
 
 
-def output_unconverted_csv_file(path, sheet_name):
+def output_unconverted_csv_file_on_memory(sheet_name):
     """
-    sheet_name(str: CSVに変換できないsheetの名前)に対し, sheet_name.csvを作成し,
-    その中にsheet_nameを書き込んでから保存するメソッド.
+    sheet_name(str: CSVに変換できないsheetの名前)に対し,
+    csvフォーマットのオンメモリfile-like objectを作成して値で返すメソッド.
     """
-    with open(os.path.join(path, "{}.csv".format(sheet_name)), 'w',
-              newline='', encoding='cp932', errors='ignore') as unconverted_csv_file:
-        unconverted_csv_file.write(("シート {} はCSVに変換できませんでした。".format(sheet_name)))
-        unconverted_csv_file.write("シートの中に写真・グラフが入ったり、"
-                                   "シートに入っている有効データが少なかったりするかもしれません。")
-    return None
+    csv_on_memory = io.StringIO()
+    csv_on_memory.write(("シート {} はCSVに変換できませんでした。\r\n".format(sheet_name)))
+    csv_on_memory.write("シートの中に写真やグラフが入ったり、"
+                        "シートに入っている有効データが少なかったりするかもしれません。")
+    unconverted_csv_data = csv_on_memory.getvalue()
+    csv_on_memory.close()
+    unconverted_csv_data = unconverted_csv_data.encode('utf-8')
+    return unconverted_csv_data
 
 
 def print_unconverted_warning(sheet_name):
@@ -293,82 +296,76 @@ class Converter(object):
     """
     ExcelファイルをCSVに変換するための容器クラス.
     param(str): "foo.xls"のようなXLSファイル名, もしくは"../../foo.xls"のようなXLSファイルの相対パス.
-    self.abs_file_name(str): "/../../foo.xls"のようなXLSファイルの絶対パス.
-    self.file_name(str): "foo.xls"のように, *クリーン*なXLSファイル名.
+    # self.abs_file_name(str): "/../../foo.xls"のようなXLSファイルの絶対パス.
+    # self.file_name(str): "foo.xls"のように, *クリーン*なXLSファイル名.
+    self.file_like_xls(bytes): S3からダウンロードしたXLSファイルをオンメモリにしたfile-like object.
     self.sheet_names(list -> str): sheet(xlrd.sheet.Sheet)の名前(str)のリスト.
     """
-    def __init__(self, file_name):
-        """
-        クラス初期化メソッド.
-        もしインスランスを定義するときparamがなければ, RuntimeErrorを挙げる.
-        """
-        if file_name:
-            self.abs_file_name = os.path.abspath(file_name)
-            self.file_name = os.path.basename(self.abs_file_name)
-        else:
-            raise RuntimeError('ファイル名はありません')
 
-        self.sheet_names = get_sheet_names_from_book(self.abs_file_name)
+    def __init__(self, xls_file_obj, bucket_name):
+        """
+        クラスのイニシャルメソッド.
+        インスランスを定義するときparamがなければ, RuntimeErrorを挙げる.
+        """
+        if xls_file_obj and bucket_name:
+            self.xls_file_obj = xls_file_obj
+            self.bucket_name = bucket_name
+        else:
+            raise RuntimeError('処理させる.xlsのバイナリファイルは渡されていない！')
+
+        self.sheet_names = get_sheet_names_from_book(self.xls_file_obj)
 
     def sheet_to_csv(self):
         """
         Convertインスタンスのself.file_nameに対し, それが指しているXLSファイルの
         全てのsheet(xlrd.sheet.Sheet)をresult(dict: -> list/None -> list)に変換し,
-        変換不能のsheetの名前(str: sheet_name)をunconverted_sheets(list: -> str)に入れて,
-        resultとunconverted_sheetを返す.
+        resultを返す.
         """
-        csv_path = get_csv_path_and_make_csv_folder(self.abs_file_name)
         result = {}
-        unconverted_sheets = []
         for sheet_name in self.sheet_names:
             try:
-                sheet = sheet_pretreatment(self.abs_file_name, sheet_name)
+                sheet = sheet_pretreatment(self.xls_file_obj, sheet_name)
                 result[sheet_name] = sheet
                 print("シート {} をCSVに変換しました.".format(sheet_name))
             except ValueError:
                 print_unconverted_warning(sheet_name)
-                output_unconverted_csv_file(csv_path, sheet_name)
                 result[sheet_name] = None
-                unconverted_sheets.append(sheet_name)
             else:
                 pass
-        return result, unconverted_sheets
+        return result
 
-    def output_csv_files(self):
+    def output_csv_files_to_memory(self):
         """
         Converter.sheet_to_csvで変換したsheet(list: -> list)を, CSVファイルに書き込む.
         """
-        csv_path = get_csv_path_and_make_csv_folder(self.abs_file_name)
-        csv_source, unconverted_sheets = self.sheet_to_csv()
+        result = {}
+        csv_source = self.sheet_to_csv()
         for sheet_name in self.sheet_names:
             csv_name = sheet_name + ".csv"
             if csv_source[sheet_name]:
-                with open(os.path.join(csv_path, csv_name), 'w', newline='',
-                          encoding='cp932', errors='ignore') as csv_file:
-                    writer = csv.writer(csv_file, delimiter=',',
-                                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                    for row in csv_source[sheet_name]:
-                        writer.writerow(row)
+                csv_file_obj = output_converted_csv_file_on_memory(csv_source, sheet_name)
+                result[csv_name] = csv_file_obj
             else:
-                pass
-        return unconverted_sheets
+                csv_file_obj = output_unconverted_csv_file_on_memory(sheet_name)
+                result[csv_name] = csv_file_obj
+        return result
 
     def pack_csv_files(self):
         """
         Converter.output_csv_fileで出力したCSVファイルを,
-        フォルダ丸ごとZIPファイルとして圧縮する.
+        フォルダ丸ごとオンメモリのZIPファイルとして圧縮する.
         """
-        zip_name = self.file_name
-        zip_name = os.path.splitext(zip_name)[0]
-        path = os.path.dirname(self.abs_file_name)
-        path = os.path.join(path, zip_name)
-        pack = shutil.make_archive(path, format='zip',
-                                   root_dir=path, base_dir='.')
-        shutil.rmtree(path)
-        return pack
+        zip_stream = io.BytesIO()
+        result = self.output_csv_files_to_memory()
+
+        with zipfile.ZipFile(zip_stream, 'w', compression=zipfile.ZIP_DEFLATED) as writer:
+            for sheet_name in self.sheet_names:
+                writer.writestr(sheet_name + '.csv', result[sheet_name + '.csv'])
+        zip_upload = zip_stream.getvalue()
+        zip_stream.close()
+        return zip_upload
 
 
 if __name__ == "__main__":
-    e2c = Converter(sys.argv[1])
-    e2c.output_csv_files()
-    e2c.pack_csv_files()
+    # xls_file_name = '国勢調査_上田.xls'
+    pass

@@ -1,9 +1,8 @@
 from django.shortcuts import render, redirect
 from .forms import FileUploadModelForm
 from .models import File
+from e2c import s3_method
 from converter import excel2csv
-import os
-import urllib.parse
 
 
 # Create your views here.
@@ -15,9 +14,14 @@ def model_form_upload(request):
                                    request.FILES)
         if form.is_valid():
             f = form.save()
-            e2c = excel2csv.Converter(f.abspath_file())
-            e2c.output_csv_files()
-            e2c.pack_csv_files()
+            key = "media/" + f.file.name
+            print(key)
+            bucket_name = s3_method.AWS_STORAGE_BUCKET_NAME
+            xls_buffer = s3_method.receive_xls_from_bucket(bucket_name, key)
+            xls_converter = excel2csv.Converter(xls_buffer, bucket_name)
+            zipped_csv_buffer = xls_converter.pack_csv_files()
+            key = key.rstrip('.xls') + '.zip'
+            zip_response = s3_method.upload_zip_to_bucket(bucket_name, zipped_csv_buffer, key)
             return redirect("/upload/list/")
     else:
         form = FileUploadModelForm()
@@ -28,28 +32,21 @@ def model_form_upload(request):
 # Show file list
 def file_list(request):
     files = File.objects.all().order_by("-id")
-    results, result_sizes, result_paths = [], [], []
-    file_names, result_names = [], []
+    zip_names, zip_urls, zip_sizes = [], [], []
+    bucket_name = s3_method.AWS_STORAGE_BUCKET_NAME
     for file in files:
-        result = os.path.splitext(file.file.url)[0] + '.zip'
-        results.append(result)
+        zip_name = file.file.name.rstrip(".xls") + ".zip"
+        zip_names.append(zip_name)
 
-        file_name = urllib.parse.unquote((file.file.url.split('/'))[3])
-        file_names.append(file_name)
+        zip_key = "media/" + zip_name
+        zip_url = file.file.url.rstrip(".xls") + ".zip"
+        zip_urls.append(zip_url)
 
-        result_name = urllib.parse.unquote((result.split('/'))[3])
-        result_names.append(result_name)
-
-        path = file.abspath_file()
-        result_paths.append(path)
-    for path in result_paths:
-        path = os.path.splitext(path)[0] + '.zip'
-        size = os.path.getsize(path)
-        result_sizes.append(size)
-    lst = zip(files, results, result_sizes, file_names, result_names)
+        zip_size = s3_method.return_size_of_obj(bucket_name, zip_key)
+        zip_sizes.append(zip_size)
+    lst = zip(zip_names, zip_urls, zip_sizes, files)
     return render(request, 'file_upload/list.html',
                   {
-                      'files': files,
                       'lst': lst,
                       'title': 'ファイルリスト'
                   })
@@ -59,7 +56,10 @@ def delete_file(request, id):
     file_id = id
     delete_files = File.objects.filter(id=file_id)
     for file in delete_files:
-        os.remove(file.abspath_file())
-        os.remove(os.path.splitext(file.abspath_file())[0] + '.zip')
+        xls_key = "media/" + file.file.name
+        zip_key = ("media/" + file.file.name).rstrip(".xls") + ".zip"
+        bucket_name = s3_method.AWS_STORAGE_BUCKET_NAME
+        xls_del_response = s3_method.delete_obj_from_bucket(bucket_name, xls_key)
+        zip_del_response = s3_method.delete_obj_from_bucket(bucket_name, zip_key)
     File.objects.filter(id=file_id).delete()
     return file_list(request)
