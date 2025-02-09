@@ -11,63 +11,63 @@ LOG_DIR = os.path.join(BASE_DIR, 'gunicorn_log')
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
-# 绑定的ip与端口
+# バインドするIPとポート
 bind = "127.0.0.1:8000"
 
-# 最大挂起的连接数，64-2048
+# 最大待機接続数、64-2048
 backlog = 512
 
-# 超时
+# タイムアウト
 timeout = 30
 
 keyfile = '/etc/letsencrypt/live/e2c.ninja/privkey.pem'
 certfile = '/etc/letsencrypt/live/e2c.ninja/fullchain.pem'
 
-# 调试状态
+# デバッグモード
 debug = False
 
-# gunicorn要切换到的目的工作目录
+# gunicornが切り替える作業ディレクトリ
 chdir = BASE_DIR
 
-# 工作进程类型(默认的是 sync 模式，还包括 eventlet, gevent, or tornado, gthread, gaiohttp)
+# ワーカープロセスタイプ（デフォルトはsyncモード、他にeventlet、gevent、tornado、gthread、gaiohttpがある）
 worker_class = 'sync'
 
-# 工作进程数
+# ワーカープロセス数
 workers = multiprocessing.cpu_count()
 
-# 指定每个工作进程开启的线程数
+# 各ワーカープロセスが開くスレッド数を指定
 threads = multiprocessing.cpu_count() * 2
 
-# 日志级别，这个日志级别指的是错误日志的级别(debug、info、warning、error、critical)，而访问日志的级别无法设置
+# ログレベル（エラーログのレベルを指す。アクセスログのレベルは設定できない）
 loglevel = 'info'
 
-# 日志格式
+# ログフォーマット
 access_log_format = '%(t)s %(p)s %(h)s "%(r)s" %(s)s %(L)s %(b)s %(f)s" "%(a)s"'
-# 其每个选项的含义如下：
+# 各オプションの意味は以下の通り：
 '''
-h          remote address
+h          リモートアドレス
 l          '-'
-u          currently '-', may be user name in future releases
-t          date of the request
-r          status line (e.g. ``GET / HTTP/1.1``)
-s          status
-b          response length or '-'
-f          referer
-a          user agent
-T          request time in seconds
-D          request time in microseconds
-L          request time in decimal seconds
-p          process ID
+u          現在は'-'、将来のリリースではユーザー名になる可能性がある
+t          リクエストの日付
+r          ステータスライン（例：``GET / HTTP/1.1``）
+s          ステータス
+b          レスポンスの長さまたは'-'
+f          リファラー
+a          ユーザーエージェント
+T          リクエスト時間（秒）
+D          リクエスト時間（マイクロ秒）
+L          リクエスト時間（10進秒）
+p          プロセスID
 '''
 
-# 访问日志文件
+# アクセスログファイル
 accesslog = os.path.join(LOG_DIR, 'gunicorn_access.log')
-# 错误日志文件
+# エラーログファイル
 errorlog = os.path.join(LOG_DIR, 'gunicorn_error.log')
-# pid 文件
+# pidファイル
 pidfile = os.path.join(LOG_DIR, 'gunicorn_error.pid')
 
-# 访问日志文件，"-" 表示标准输出
+# アクセスログファイル、"-"は標準出力を意味する
 accesslog = "-"
-# 错误日志文件，"-" 表示标准输出
+# エラーログファイル、"-"は標準出力を意味する
 errorlog = "-"
