@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'blog.apps.BlogConfig',
     'file_upload.apps.FileUploadConfig',
     'gunicorn',
-    'captcha',
+    'django_recaptcha',
     'django_s3_sqlite',
     'storages'
 ]

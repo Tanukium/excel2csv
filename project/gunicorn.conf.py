@@ -20,8 +20,8 @@ backlog = 512
 # タイムアウト
 timeout = 30
 
-keyfile = '/etc/letsencrypt/live/e2c.ninja/privkey.pem'
-certfile = '/etc/letsencrypt/live/e2c.ninja/fullchain.pem'
+#keyfile = '/etc/letsencrypt/live/e2c.ninja/privkey.pem'
+#certfile = '/etc/letsencrypt/live/e2c.ninja/fullchain.pem'
 
 # デバッグモード
 debug = False
